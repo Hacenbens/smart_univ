@@ -1,4 +1,4 @@
-import 'package:fpdart/fpdart.dart';
+import 'package:smart_univ/core/either.dart';
 import 'package:smart_univ/core/error/app_exception.dart';
 import 'package:smart_univ/domain/entities/user_profile.dart';
 import 'package:smart_univ/domain/repositories/auth_repository.dart';
@@ -6,7 +6,7 @@ import 'package:smart_univ/domain/repositories/auth_repository.dart';
 class StubAuthRepository implements AuthRepository {
   static const _mockUser = UserProfile(
     id: 'u1',
-    fullName: 'Hacen Bensaci',
+    fullName: 'Hacen Bensaad',
     email: 'hacen@university.dz',
     studentId: '20210001',
     department: 'Computer Science',

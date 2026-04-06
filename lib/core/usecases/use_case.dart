@@ -1,4 +1,4 @@
-import 'package:fpdart/fpdart.dart';
+import 'package:smart_univ/core/either.dart';
 import 'package:smart_univ/core/error/app_exception.dart';
 
 abstract interface class UseCase<Type, Params> {
