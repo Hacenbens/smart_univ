@@ -2,7 +2,6 @@
 // Requires go_router and equatable to be installed (`flutter pub get`).
 // Run: flutter test test/widget_test.dart
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:smart_univ/main.dart';
 
@@ -20,6 +19,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Sign in (mock)'));
     await tester.pumpAndSettle();
-    expect(find.text('Home'), findsOneWidget);
+    // AppBar title + NavigationBar tab both show "Home" — check the AppBar specifically
+    expect(find.text('Home — coming soon'), findsOneWidget);
   });
 }
