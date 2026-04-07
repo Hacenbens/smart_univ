@@ -7,6 +7,6 @@ sealed class SettingsEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-final class SettingsRequested extends SettingsEvent {
-  const SettingsRequested();
+final class ToggleTheme extends SettingsEvent {
+  const ToggleTheme();
 }

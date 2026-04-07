@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_univ/core/di/injection_container.dart';
-import 'package:smart_univ/core/theme/app_theme.dart';
 import 'package:smart_univ/core/router/app_router.dart';
 import 'package:smart_univ/core/router/auth_state.dart';
+import 'package:smart_univ/core/theme/app_theme.dart';
 import 'package:smart_univ/features/announcements/presentation/bloc/announcements_bloc.dart';
 import 'package:smart_univ/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:smart_univ/features/events/presentation/bloc/events_bloc.dart';
@@ -41,12 +41,17 @@ class _SmartCampusAppState extends State<SmartCampusApp> {
         BlocProvider(create: (_) => sl<AuthBloc>()),
         BlocProvider(create: (_) => sl<SettingsBloc>()),
       ],
-      child: MaterialApp.router(
-        title: 'SmartCampus',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        routerConfig: _appRouter.router,
+      child: BlocBuilder<SettingsBloc, SettingsState>(
+        builder: (context, settings) {
+          return MaterialApp.router(
+            title: 'SmartCampus',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: settings.themeMode,
+            routerConfig: _appRouter.router,
+          );
+        },
       ),
     );
   }
