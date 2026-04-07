@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_univ/core/di/injection_container.dart';
+import 'package:smart_univ/core/theme/app_theme.dart';
 import 'package:smart_univ/core/router/app_router.dart';
 import 'package:smart_univ/core/router/auth_state.dart';
 import 'package:smart_univ/features/announcements/presentation/bloc/announcements_bloc.dart';
@@ -43,10 +44,8 @@ class _SmartCampusAppState extends State<SmartCampusApp> {
       child: MaterialApp.router(
         title: 'SmartCampus',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-          useMaterial3: true,
-        ),
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
         routerConfig: _appRouter.router,
       ),
     );
