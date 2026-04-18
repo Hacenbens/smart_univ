@@ -8,12 +8,14 @@ import 'package:smart_univ/data/datasources/announcement_remote_datasource_impl.
 import 'package:smart_univ/data/datasources/auth0_token_provider.dart';
 import 'package:smart_univ/data/datasources/event_remote_datasource.dart';
 import 'package:smart_univ/data/datasources/event_remote_datasource_impl.dart';
-import 'package:smart_univ/data/repositories/stub_announcement_repository.dart';
+import 'package:smart_univ/data/repositories/announcement_repository_impl.dart';
+import 'package:smart_univ/data/repositories/event_repository_impl.dart';
 import 'package:smart_univ/data/repositories/stub_auth_repository.dart';
-import 'package:smart_univ/data/repositories/stub_event_repository.dart';
 import 'package:smart_univ/domain/repositories/announcement_repository.dart';
 import 'package:smart_univ/domain/repositories/auth_repository.dart';
 import 'package:smart_univ/domain/repositories/event_repository.dart';
+import 'package:smart_univ/domain/usecases/get_announcements_use_case.dart';
+import 'package:smart_univ/domain/usecases/get_events_use_case.dart';
 import 'package:smart_univ/features/announcements/presentation/bloc/announcements_bloc.dart';
 import 'package:smart_univ/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:smart_univ/features/events/presentation/bloc/events_bloc.dart';
@@ -49,18 +51,22 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
 
   // ── Repositories ────────────────────────────────────────────────────────────
   sl.registerLazySingleton<AnnouncementRepository>(
-    () => StubAnnouncementRepository(),
+    () => AnnouncementRepositoryImpl(sl<AnnouncementRemoteDataSource>()),
   );
   sl.registerLazySingleton<EventRepository>(
-    () => StubEventRepository(),
+    () => EventRepositoryImpl(sl<EventRemoteDataSource>()),
   );
   sl.registerLazySingleton<AuthRepository>(
     () => StubAuthRepository(),
   );
 
+  // ── Use Cases ────────────────────────────────────────────────────────────────
+  sl.registerLazySingleton(() => GetAnnouncementsUseCase(sl<AnnouncementRepository>()));
+  sl.registerLazySingleton(() => GetEventsUseCase(sl<EventRepository>()));
+
   // ── BLoCs ───────────────────────────────────────────────────────────────────
-  sl.registerFactory(() => AnnouncementsBloc(sl()));
-  sl.registerFactory(() => EventsBloc(sl()));
+  sl.registerFactory(() => AnnouncementsBloc(sl<GetAnnouncementsUseCase>()));
+  sl.registerFactory(() => EventsBloc(sl<GetEventsUseCase>()));
   sl.registerFactory(() => AuthBloc(sl()));
   sl.registerFactory(() => SettingsBloc());
 }
