@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_univ/core/di/injection_container.dart';
+import 'package:smart_univ/core/network/logging_interceptor.dart';
 import 'package:smart_univ/core/router/app_router.dart';
 import 'package:smart_univ/core/router/auth_state.dart';
 import 'package:smart_univ/core/theme/app_theme.dart';
