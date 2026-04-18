@@ -11,8 +11,11 @@ class AuthInterceptor extends Interceptor {
   }) : _tokenProvider = tokenProvider;
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    final token = _tokenProvider.getToken();
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    final token = await _tokenProvider.getToken();
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
     }

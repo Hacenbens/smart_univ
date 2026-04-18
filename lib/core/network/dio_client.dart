@@ -18,13 +18,17 @@ class DioClient {
             receiveTimeout: const Duration(seconds: 10),
           ),
         ) {
+    // Registration order: Error → Auth → Logging
+    // Dio runs onRequest in registration order, onError in reverse order.
+    // Reverse error order: Logging → Auth → Error, so ErrorInterceptor
+    // catches last — after AuthInterceptor has had a chance to retry on 401.
     dio.interceptors.addAll([
-      LoggingInterceptor(),
+      ErrorInterceptor(),
       AuthInterceptor(
         tokenProvider: tokenProvider,
         onAuthExpired: onAuthExpired,
       ),
-      ErrorInterceptor(),
+      LoggingInterceptor(),
     ]);
   }
 }
