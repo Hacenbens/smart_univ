@@ -1,5 +1,4 @@
 import 'package:auth0_flutter/auth0_flutter.dart';
-import 'package:auth0_flutter_platform_interface/auth0_flutter_platform_interface.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:smart_univ/data/datasources/auth0_token_provider.dart';
