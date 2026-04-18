@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:smart_univ/core/constants/app_constants.dart';
 import 'package:smart_univ/core/network/auth_interceptor.dart';
+import 'package:smart_univ/core/network/error_interceptor.dart';
 import 'package:smart_univ/core/network/logging_interceptor.dart';
 import 'package:smart_univ/core/network/token_provider.dart';
 
@@ -23,6 +24,7 @@ class DioClient {
         tokenProvider: tokenProvider,
         onAuthExpired: onAuthExpired,
       ),
+      ErrorInterceptor(),
     ]);
   }
 }
