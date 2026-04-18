@@ -14,11 +14,15 @@ class LoggingInterceptor extends Interceptor {
   }
 
   static Future<void> _initAsync() async {
-    final dir = await getApplicationDocumentsDirectory();
-    _logFile = File('${dir.path}/dio_logs.txt');
-    // Clear previous session logs on startup
-    if (await _logFile!.exists()) await _logFile!.writeAsString('');
-    _write('=== Session started: ${DateTime.now()} ===\n');
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      _logFile = File('${dir.path}/dio_logs.txt');
+      if (await _logFile!.exists()) await _logFile!.writeAsString('');
+      _write('=== Session started: ${DateTime.now()} ===\n');
+    } catch (_) {
+      // Platform channel unavailable (tests/CI) — fall back to console only
+      _logFile = null;
+    }
   }
 
   static void _write(String line) {

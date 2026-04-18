@@ -10,6 +10,10 @@ import 'package:smart_univ/features/events/presentation/bloc/events_bloc.dart';
 import 'package:smart_univ/features/settings/presentation/bloc/settings_bloc.dart';
 
 void main() {
+  setUpAll(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+  });
+
   setUp(() async {
     await GetIt.instance.reset();
     await initDependencies();
