@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:smart_univ/core/error/app_exception.dart';
 import 'package:smart_univ/core/network/dio_client.dart';
 import 'package:smart_univ/data/datasources/event_remote_datasource.dart';
@@ -20,6 +21,9 @@ class EventRemoteDataSourceImpl implements EventRemoteDataSource {
         map['title'] = 'Event: ${map['title']}';
         return EventDto.fromJson(map);
       }).toList();
+    } on DioException catch (e) {
+      if (e.error is AppException) throw e.error as AppException;
+      rethrow;
     } on AppException {
       rethrow;
     }

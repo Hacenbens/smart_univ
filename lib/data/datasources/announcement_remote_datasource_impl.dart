@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:smart_univ/core/error/app_exception.dart';
 import 'package:smart_univ/core/network/dio_client.dart';
 import 'package:smart_univ/data/datasources/announcement_remote_datasource.dart';
@@ -15,6 +16,9 @@ class AnnouncementRemoteDataSourceImpl implements AnnouncementRemoteDataSource {
       return (response.data as List)
           .map((json) => AnnouncementDto.fromJson(json as Map<String, dynamic>))
           .toList();
+    } on DioException catch (e) {
+      if (e.error is AppException) throw e.error as AppException;
+      rethrow;
     } on AppException {
       rethrow;
     }

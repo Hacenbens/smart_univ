@@ -4,7 +4,16 @@ import 'package:smart_univ/core/error/app_exception.dart';
 class ErrorInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    throw _mapToAppException(err);
+    final appException = _mapToAppException(err);
+    handler.reject(
+      DioException(
+        requestOptions: err.requestOptions,
+        response: err.response,
+        type: DioExceptionType.unknown,
+        error: appException,
+        message: appException.message,
+      ),
+    );
   }
 
   AppException _mapToAppException(DioException err) {
