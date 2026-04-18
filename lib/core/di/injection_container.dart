@@ -2,6 +2,7 @@ import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:get_it/get_it.dart';
 import 'package:smart_univ/core/constants/app_constants.dart';
 import 'package:smart_univ/core/network/dio_client.dart';
+import 'package:smart_univ/core/network/logging_interceptor.dart';
 import 'package:smart_univ/core/network/token_provider.dart';
 import 'package:smart_univ/data/datasources/announcement_remote_datasource.dart';
 import 'package:smart_univ/data/datasources/announcement_remote_datasource_impl.dart';
@@ -24,6 +25,9 @@ import 'package:smart_univ/features/settings/presentation/bloc/settings_bloc.dar
 final sl = GetIt.instance;
 
 Future<void> initDependencies({void Function()? onAuthExpired}) async {
+  // ── Logging ──────────────────────────────────────────────────────────────────
+  await LoggingInterceptor.init();
+
   // ── Auth0 ────────────────────────────────────────────────────────────────────
   sl.registerLazySingleton<Auth0>(
     () => Auth0(AppConstants.auth0Domain, AppConstants.auth0ClientId),
