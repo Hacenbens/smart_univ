@@ -1,15 +1,16 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:smart_univ/domain/repositories/announcement_repository.dart';
+import 'package:smart_univ/domain/entities/announcement.dart';
+import 'package:smart_univ/domain/usecases/get_announcements_use_case.dart';
+import 'package:smart_univ/core/usecases/use_case.dart';
 
 part 'announcements_event.dart';
 part 'announcements_state.dart';
 
 class AnnouncementsBloc extends Bloc<AnnouncementsEvent, AnnouncementsState> {
-  // ignore: unused_field — will be used in Week 2
-  final AnnouncementRepository _repository;
+  final GetAnnouncementsUseCase _getAnnouncements;
 
-  AnnouncementsBloc(this._repository) : super(AnnouncementsInitial()) {
+  AnnouncementsBloc(this._getAnnouncements) : super(AnnouncementsInitial()) {
     on<AnnouncementsRequested>(_onRequested);
   }
 
@@ -17,6 +18,11 @@ class AnnouncementsBloc extends Bloc<AnnouncementsEvent, AnnouncementsState> {
     AnnouncementsRequested event,
     Emitter<AnnouncementsState> emit,
   ) async {
-    // TODO(week-2): fetch from repository and emit loaded/error states
+    emit(AnnouncementsLoading());
+    final result = await _getAnnouncements(const NoParams());
+    result.fold(
+      (failure) => emit(AnnouncementsFailure(failure.message)),
+      (announcements) => emit(AnnouncementsLoaded(announcements)),
+    );
   }
 }
