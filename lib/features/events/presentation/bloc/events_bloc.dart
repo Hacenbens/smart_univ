@@ -1,15 +1,16 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:smart_univ/domain/repositories/event_repository.dart';
+import 'package:smart_univ/core/usecases/use_case.dart';
+import 'package:smart_univ/domain/entities/event.dart';
+import 'package:smart_univ/domain/usecases/get_events_use_case.dart';
 
 part 'events_event.dart';
 part 'events_state.dart';
 
 class EventsBloc extends Bloc<EventsEvent, EventsState> {
-  // ignore: unused_field — will be used in Week 2
-  final EventRepository _repository;
+  final GetEventsUseCase _getEvents;
 
-  EventsBloc(this._repository) : super(EventsInitial()) {
+  EventsBloc(this._getEvents) : super(EventsInitial()) {
     on<EventsRequested>(_onRequested);
   }
 
@@ -17,6 +18,11 @@ class EventsBloc extends Bloc<EventsEvent, EventsState> {
     EventsRequested event,
     Emitter<EventsState> emit,
   ) async {
-    // TODO(week-2): fetch from repository and emit loaded/error states
+    emit(EventsLoading());
+    final result = await _getEvents(const NoParams());
+    result.fold(
+      (failure) => emit(EventsFailure(failure.message)),
+      (events) => emit(EventsLoaded(events)),
+    );
   }
 }
