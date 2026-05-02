@@ -6,6 +6,8 @@ import 'package:smart_univ/core/cubit/connectivity_cubit.dart';
 import 'package:smart_univ/core/services/connectivity_service.dart';
 import 'package:smart_univ/core/services/settings_service.dart';
 import 'package:smart_univ/data/local/app_database.dart';
+import 'package:smart_univ/data/local/daos/announcements_dao.dart';
+import 'package:smart_univ/data/local/daos/events_dao.dart';
 import 'package:smart_univ/core/network/dio_client.dart';
 import 'package:smart_univ/core/network/logging_interceptor.dart';
 import 'package:smart_univ/core/network/token_provider.dart';
