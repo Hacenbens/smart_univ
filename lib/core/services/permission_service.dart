@@ -21,7 +21,7 @@ enum PermissionResult {
 ///
 /// ## Rule: check first, request on explicit user action
 ///
-/// ```
+/// ```dart
 /// // At screen init — never triggers a dialog:
 /// final result = await permissionService.checkPermission(Permission.camera);
 /// if (result == PermissionResult.granted) { showFeature(); }
@@ -38,7 +38,7 @@ class PermissionService {
   /// dialog. Safe to call at screen initialisation, in initState, or inside
   /// a BLoC's initial data-fetch.
   Future<PermissionResult> checkPermission(Permission permission) async {
-    final status = await permission.status;
+    final status = await executeCheck(permission);
     return mapStatus(status);
   }
 
@@ -46,7 +46,7 @@ class PermissionService {
   /// user's decision. Only call this in response to an explicit user gesture
   /// (button tap, menu action, etc.) — never at app or screen startup.
   Future<PermissionResult> requestPermission(Permission permission) async {
-    final status = await permission.request();
+    final status = await executeRequest(permission);
     return mapStatus(status);
   }
 
@@ -64,6 +64,20 @@ class PermissionService {
       return false;
     }
   }
+
+  // ── Platform-call seams (overridable in tests) ──────────────────────────────
+
+  /// Calls [permission.request()] — triggers the system dialog.
+  /// Override in tests to avoid hitting the platform channel.
+  @visibleForTesting
+  Future<PermissionStatus> executeRequest(Permission permission) =>
+      permission.request();
+
+  /// Reads [permission.status] — no dialog shown.
+  /// Override in tests to avoid hitting the platform channel.
+  @visibleForTesting
+  Future<PermissionStatus> executeCheck(Permission permission) =>
+      permission.status;
 
   /// Maps a raw [PermissionStatus] from permission_handler to [PermissionResult].
   ///

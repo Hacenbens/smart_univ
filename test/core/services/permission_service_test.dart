@@ -39,6 +39,26 @@ class _FakePermissionService extends PermissionService {
   }
 }
 
+// Seam subclass that overrides only the platform-channel seam methods so the
+// real checkPermission / requestPermission logic runs end-to-end in tests.
+class _SeamPermissionService extends PermissionService {
+  final PermissionStatus stubbedRequestStatus;
+  final PermissionStatus stubbedCheckStatus;
+
+  _SeamPermissionService({
+    required this.stubbedRequestStatus,
+    PermissionStatus? stubbedCheckStatus,
+  }) : stubbedCheckStatus = stubbedCheckStatus ?? stubbedRequestStatus;
+
+  @override
+  Future<PermissionStatus> executeRequest(Permission permission) async =>
+      stubbedRequestStatus;
+
+  @override
+  Future<PermissionStatus> executeCheck(Permission permission) async =>
+      stubbedCheckStatus;
+}
+
 void main() {
   // ── mapStatus (pure mapping, no platform channels) ───────────────────────────
 
@@ -155,6 +175,60 @@ void main() {
         PermissionResult.permanentlyDenied,
         PermissionResult.restricted,
       ]);
+    });
+  });
+
+  // ── requestPermission via seam — Permission.camera specific ──────────────────
+  //
+  // These tests use _SeamPermissionService which overrides only the seam methods
+  // (executeRequest / executeCheck), letting the real requestPermission /
+  // checkPermission logic run end-to-end without hitting the platform channel.
+
+  group('requestPermission(Permission.camera) via seam', () {
+    test('returns PermissionResult.denied when OS returns denied', () async {
+      final service = _SeamPermissionService(
+        stubbedRequestStatus: PermissionStatus.denied,
+      );
+      final result = await service.requestPermission(Permission.camera);
+      expect(result, PermissionResult.denied);
+    });
+
+    test('returns PermissionResult.permanentlyDenied when OS returns permanentlyDenied', () async {
+      final service = _SeamPermissionService(
+        stubbedRequestStatus: PermissionStatus.permanentlyDenied,
+      );
+      final result = await service.requestPermission(Permission.camera);
+      expect(result, PermissionResult.permanentlyDenied);
+    });
+
+    test('returns PermissionResult.granted when OS returns granted', () async {
+      final service = _SeamPermissionService(
+        stubbedRequestStatus: PermissionStatus.granted,
+      );
+      final result = await service.requestPermission(Permission.camera);
+      expect(result, PermissionResult.granted);
+    });
+  });
+
+  // ── checkPermission(Permission.camera) via seam ───────────────────────────────
+
+  group('checkPermission(Permission.camera) via seam', () {
+    test('returns PermissionResult.denied when status is denied', () async {
+      final service = _SeamPermissionService(
+        stubbedRequestStatus: PermissionStatus.denied,
+        stubbedCheckStatus: PermissionStatus.denied,
+      );
+      final result = await service.checkPermission(Permission.camera);
+      expect(result, PermissionResult.denied);
+    });
+
+    test('returns PermissionResult.granted when status is granted', () async {
+      final service = _SeamPermissionService(
+        stubbedRequestStatus: PermissionStatus.granted,
+        stubbedCheckStatus: PermissionStatus.granted,
+      );
+      final result = await service.checkPermission(Permission.camera);
+      expect(result, PermissionResult.granted);
     });
   });
 }

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:smart_univ/core/di/injection_container.dart';
+import 'package:smart_univ/core/services/permission_service.dart';
 import 'package:smart_univ/domain/repositories/announcement_repository.dart';
 import 'package:smart_univ/domain/repositories/auth_repository.dart';
 import 'package:smart_univ/domain/repositories/event_repository.dart';
@@ -24,6 +25,16 @@ void main() {
   });
 
   group('initDependencies', () {
+    group('services are registered as lazy singletons', () {
+      test('PermissionService resolves', () {
+        expect(sl<PermissionService>(), isA<PermissionService>());
+      });
+
+      test('PermissionService returns same instance each call', () {
+        expect(sl<PermissionService>(), same(sl<PermissionService>()));
+      });
+    });
+
     group('repositories are registered as lazy singletons', () {
       test('AnnouncementRepository resolves', () {
         expect(sl<AnnouncementRepository>(), isA<AnnouncementRepository>());
