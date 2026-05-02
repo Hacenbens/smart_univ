@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_univ/core/cubit/connectivity_cubit.dart';
 import 'package:smart_univ/core/di/injection_container.dart';
+import 'package:smart_univ/core/usecases/app_initialization_use_case.dart';
 import 'package:smart_univ/core/router/app_router.dart';
 import 'package:smart_univ/core/router/auth_state.dart';
 import 'package:smart_univ/core/theme/app_theme.dart';
@@ -13,6 +14,7 @@ import 'package:smart_univ/features/settings/presentation/bloc/settings_bloc.dar
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initDependencies();
+  await sl<AppInitializationUseCase>().call();
   runApp(const SmartCampusApp());
 }
 

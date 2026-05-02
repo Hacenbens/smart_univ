@@ -24,6 +24,7 @@ import 'package:smart_univ/data/repositories/stub_auth_repository.dart';
 import 'package:smart_univ/domain/repositories/announcement_repository.dart';
 import 'package:smart_univ/domain/repositories/auth_repository.dart';
 import 'package:smart_univ/domain/repositories/event_repository.dart';
+import 'package:smart_univ/core/usecases/app_initialization_use_case.dart';
 import 'package:smart_univ/domain/usecases/get_announcements_use_case.dart';
 import 'package:smart_univ/domain/usecases/get_events_use_case.dart';
 import 'package:smart_univ/features/announcements/presentation/bloc/announcements_bloc.dart';
@@ -102,6 +103,9 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
   );
 
   // ── Use Cases ────────────────────────────────────────────────────────────────
+  sl.registerLazySingleton(
+    () => AppInitializationUseCase(sl<AnnouncementsDao>(), sl<EventsDao>()),
+  );
   sl.registerLazySingleton(() => GetAnnouncementsUseCase(sl<AnnouncementRepository>()));
   sl.registerLazySingleton(() => GetEventsUseCase(sl<EventRepository>()));
 
