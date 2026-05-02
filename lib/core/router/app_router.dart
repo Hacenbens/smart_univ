@@ -5,6 +5,7 @@ import 'package:smart_univ/core/router/go_router_observer.dart';
 import 'package:smart_univ/features/announcements/presentation/pages/announcements_page.dart';
 import 'package:smart_univ/features/auth/presentation/pages/login_page.dart';
 import 'package:smart_univ/features/events/presentation/pages/events_page.dart';
+import 'package:smart_univ/features/map/presentation/pages/map_screen.dart';
 import 'package:smart_univ/features/settings/presentation/pages/settings_page.dart';
 import 'package:smart_univ/presentation/pages/home_page.dart';
 import 'package:smart_univ/presentation/shell/scaffold_with_nav_bar.dart';
@@ -46,6 +47,10 @@ class AppRouter {
           GoRoute(
             path: '/events',
             builder: (context, state) => const EventsPage(),
+          ),
+          GoRoute(
+            path: '/map',
+            builder: (context, state) => const MapScreen(),
           ),
           GoRoute(
             path: '/settings',
