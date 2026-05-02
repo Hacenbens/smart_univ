@@ -60,6 +60,9 @@ dependencies:
   # Connectivity
   connectivity_plus: ^6.0.0
 
+  # Persistent key-value storage
+  shared_preferences: ^2.3.0
+
   # Identity provider
   auth0_flutter: ^2.0.1
 
