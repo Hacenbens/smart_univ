@@ -15,7 +15,18 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
-      body: BlocBuilder<SettingsBloc, SettingsState>(
+      body: BlocConsumer<SettingsBloc, SettingsState>(
+        listenWhen: (prev, curr) =>
+            curr.exportStatus == ExportStatus.failure &&
+            prev.exportStatus != ExportStatus.failure,
+        listener: (context, state) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.exportError ?? 'Export failed'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        },
         builder: (context, state) => ListView(
           children: [
             _SectionHeader('Appearance'),
@@ -35,6 +46,11 @@ class SettingsPage extends StatelessWidget {
               onChanged: (enabled) => context
                   .read<SettingsBloc>()
                   .add(SettingsNotificationsChanged(enabled)),
+            ),
+            const Divider(height: 1),
+            _SectionHeader('Data'),
+            _ExportTile(
+              isLoading: state.exportStatus == ExportStatus.loading,
             ),
           ],
         ),
@@ -133,12 +149,36 @@ class _LanguageTile extends StatelessWidget {
             .toList(),
         onChanged: (code) {
           if (code != null) {
-            context
-                .read<SettingsBloc>()
-                .add(SettingsLanguageChanged(code));
+            context.read<SettingsBloc>().add(SettingsLanguageChanged(code));
           }
         },
       ),
+    );
+  }
+}
+
+class _ExportTile extends StatelessWidget {
+  final bool isLoading;
+  const _ExportTile({required this.isLoading});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: const Icon(Icons.file_download_outlined),
+      title: const Text('Export Timetable'),
+      subtitle: const Text('Save schedule as JSON and share'),
+      trailing: isLoading
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.chevron_right),
+      onTap: isLoading
+          ? null
+          : () => context
+              .read<SettingsBloc>()
+              .add(const ExportTimetableRequested()),
     );
   }
 }

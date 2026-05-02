@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:smart_univ/core/either.dart';
+import 'package:smart_univ/core/error/app_exception.dart';
 import 'package:smart_univ/core/services/settings_service.dart';
+import 'package:smart_univ/domain/usecases/export_timetable_use_case.dart';
 import 'package:smart_univ/features/settings/presentation/bloc/settings_bloc.dart';
 
 class MockSettingsService extends Mock implements SettingsService {}
 
+class MockExportTimetableUseCase extends Mock
+    implements ExportTimetableUseCase {}
+
 void main() {
   late MockSettingsService mockSettings;
+  late MockExportTimetableUseCase mockExport;
   late SettingsBloc bloc;
 
   SettingsBloc buildBloc({
@@ -17,11 +24,16 @@ void main() {
   }) {
     when(() => mockSettings.getThemeMode()).thenReturn(storedTheme);
     when(() => mockSettings.getLanguage()).thenReturn(storedLanguage);
-    when(() => mockSettings.getNotificationsEnabled()).thenReturn(storedNotifications);
-    return SettingsBloc(mockSettings);
+    when(() => mockSettings.getNotificationsEnabled())
+        .thenReturn(storedNotifications);
+    return SettingsBloc(mockSettings, mockExport);
   }
 
-  setUp(() => mockSettings = MockSettingsService());
+  setUp(() {
+    mockSettings = MockSettingsService();
+    mockExport = MockExportTimetableUseCase();
+  });
+
   tearDown(() => bloc.close());
 
   // ── Initial state ────────────────────────────────────────────────────────────
@@ -29,20 +41,18 @@ void main() {
   group('initial state', () {
     test('reads all three preferences from SettingsService on construction', () {
       bloc = buildBloc(
-        storedTheme: 'dark',
-        storedLanguage: 'fr',
-        storedNotifications: false,
-      );
+          storedTheme: 'dark', storedLanguage: 'fr', storedNotifications: false);
       expect(bloc.state.themeMode, ThemeMode.dark);
       expect(bloc.state.language, 'fr');
       expect(bloc.state.notificationsEnabled, false);
     });
 
-    test('defaults to system / en / true when nothing is stored', () {
+    test('defaults to system / en / true / idle when nothing is stored', () {
       bloc = buildBloc();
       expect(bloc.state.themeMode, ThemeMode.system);
       expect(bloc.state.language, 'en');
       expect(bloc.state.notificationsEnabled, true);
+      expect(bloc.state.exportStatus, ExportStatus.idle);
     });
 
     test('falls back to ThemeMode.system for an unknown stored value', () {
@@ -69,21 +79,16 @@ void main() {
       bloc.add(const SettingsThemeChanged(ThemeMode.light));
       await expectLater(
         bloc.stream,
-        emits(isA<SettingsState>().having(
-          (s) => s.themeMode,
-          'themeMode',
-          ThemeMode.light,
-        )),
+        emits(isA<SettingsState>()
+            .having((s) => s.themeMode, 'themeMode', ThemeMode.light)),
       );
     });
 
     test('does not alter language or notifications', () async {
       bloc = buildBloc(storedLanguage: 'fr', storedNotifications: false);
       when(() => mockSettings.setThemeMode(any())).thenAnswer((_) async {});
-
       bloc.add(const SettingsThemeChanged(ThemeMode.dark));
       await Future<void>.delayed(Duration.zero);
-
       expect(bloc.state.language, 'fr');
       expect(bloc.state.notificationsEnabled, false);
     });
@@ -107,21 +112,16 @@ void main() {
       bloc.add(const SettingsLanguageChanged('ar'));
       await expectLater(
         bloc.stream,
-        emits(isA<SettingsState>().having(
-          (s) => s.language,
-          'language',
-          'ar',
-        )),
+        emits(isA<SettingsState>()
+            .having((s) => s.language, 'language', 'ar')),
       );
     });
 
     test('does not alter themeMode or notifications', () async {
       bloc = buildBloc(storedTheme: 'dark', storedNotifications: false);
       when(() => mockSettings.setLanguage(any())).thenAnswer((_) async {});
-
       bloc.add(const SettingsLanguageChanged('fr'));
       await Future<void>.delayed(Duration.zero);
-
       expect(bloc.state.themeMode, ThemeMode.dark);
       expect(bloc.state.notificationsEnabled, false);
     });
@@ -147,10 +147,7 @@ void main() {
       await expectLater(
         bloc.stream,
         emits(isA<SettingsState>().having(
-          (s) => s.notificationsEnabled,
-          'notificationsEnabled',
-          false,
-        )),
+            (s) => s.notificationsEnabled, 'notificationsEnabled', false)),
       );
     });
 
@@ -158,7 +155,6 @@ void main() {
       bloc = buildBloc(storedNotifications: false);
       when(() => mockSettings.setNotificationsEnabled(any()))
           .thenAnswer((_) async {});
-
       bloc.add(const SettingsNotificationsChanged(true));
       await Future<void>.delayed(Duration.zero);
       verify(() => mockSettings.setNotificationsEnabled(true)).called(1);
@@ -168,12 +164,79 @@ void main() {
       bloc = buildBloc(storedTheme: 'dark', storedLanguage: 'fr');
       when(() => mockSettings.setNotificationsEnabled(any()))
           .thenAnswer((_) async {});
-
       bloc.add(const SettingsNotificationsChanged(false));
       await Future<void>.delayed(Duration.zero);
-
       expect(bloc.state.themeMode, ThemeMode.dark);
       expect(bloc.state.language, 'fr');
+    });
+  });
+
+  // ── ExportTimetableRequested ─────────────────────────────────────────────────
+
+  group('ExportTimetableRequested', () {
+    setUp(() => bloc = buildBloc());
+
+    test('emits loading then success on successful export', () async {
+      when(() => mockExport()).thenAnswer((_) async => right('path/to/file'));
+
+      bloc.add(const ExportTimetableRequested());
+
+      await expectLater(
+        bloc.stream,
+        emitsInOrder([
+          isA<SettingsState>()
+              .having((s) => s.exportStatus, 'status', ExportStatus.loading),
+          isA<SettingsState>()
+              .having((s) => s.exportStatus, 'status', ExportStatus.success),
+        ]),
+      );
+    });
+
+    test('emits loading then failure on export error', () async {
+      when(() => mockExport()).thenAnswer(
+        (_) async => left(const CacheException('disk full')),
+      );
+
+      bloc.add(const ExportTimetableRequested());
+
+      await expectLater(
+        bloc.stream,
+        emitsInOrder([
+          isA<SettingsState>()
+              .having((s) => s.exportStatus, 'status', ExportStatus.loading),
+          isA<SettingsState>()
+              .having((s) => s.exportStatus, 'status', ExportStatus.failure)
+              .having((s) => s.exportError, 'exportError', 'disk full'),
+        ]),
+      );
+    });
+
+    test('clears exportError when a new export starts', () async {
+      // First attempt fails.
+      when(() => mockExport()).thenAnswer(
+        (_) async => left(const CacheException('disk full')),
+      );
+      bloc.add(const ExportTimetableRequested());
+      await Future<void>.delayed(Duration.zero);
+      expect(bloc.state.exportError, 'disk full');
+
+      // Second attempt starts — loading state must have null exportError.
+      when(() => mockExport()).thenAnswer((_) async => right('path'));
+      bloc.add(const ExportTimetableRequested());
+
+      await expectLater(
+        bloc.stream,
+        emits(isA<SettingsState>()
+            .having((s) => s.exportStatus, 'status', ExportStatus.loading)
+            .having((s) => s.exportError, 'exportError', isNull)),
+      );
+    });
+
+    test('calls ExportTimetableUseCase exactly once per event', () async {
+      when(() => mockExport()).thenAnswer((_) async => right('path'));
+      bloc.add(const ExportTimetableRequested());
+      await Future<void>.delayed(Duration.zero);
+      verify(() => mockExport()).called(1);
     });
   });
 
@@ -190,6 +253,21 @@ void main() {
       expect(updated.language, 'ar');
       expect(updated.themeMode, ThemeMode.dark);
       expect(updated.notificationsEnabled, false);
+    });
+
+    test('copyWith preserves exportError when not explicitly set', () {
+      const s = SettingsState(
+        exportStatus: ExportStatus.failure,
+        exportError: 'disk full',
+      );
+      final updated = s.copyWith(exportStatus: ExportStatus.idle);
+      expect(updated.exportError, 'disk full');
+    });
+
+    test('copyWith clears exportError when explicitly set to null', () {
+      const s = SettingsState(exportError: 'disk full');
+      final updated = s.copyWith(exportError: null);
+      expect(updated.exportError, isNull);
     });
 
     test('two states with identical fields are equal', () {

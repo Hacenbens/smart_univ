@@ -122,5 +122,7 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
   sl.registerFactory(() => AnnouncementsBloc(sl<GetAnnouncementsUseCase>()));
   sl.registerFactory(() => EventsBloc(sl<GetEventsUseCase>()));
   sl.registerFactory(() => AuthBloc(sl()));
-  sl.registerFactory(() => SettingsBloc(sl<SettingsService>()));
+  sl.registerFactory(
+    () => SettingsBloc(sl<SettingsService>(), sl<ExportTimetableUseCase>()),
+  );
 }

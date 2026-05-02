@@ -33,3 +33,7 @@ final class SettingsNotificationsChanged extends SettingsEvent {
   @override
   List<Object?> get props => [enabled];
 }
+
+final class ExportTimetableRequested extends SettingsEvent {
+  const ExportTimetableRequested();
+}
