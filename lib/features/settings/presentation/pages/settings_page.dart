@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:nfc_manager/nfc_manager.dart';
 import 'package:smart_univ/features/settings/presentation/bloc/settings_bloc.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -52,6 +54,9 @@ class SettingsPage extends StatelessWidget {
             _ExportTile(
               isLoading: state.exportStatus == ExportStatus.loading,
             ),
+            const Divider(height: 1),
+            _SectionHeader('Hardware'),
+            const _HardwareCapabilityCard(),
           ],
         ),
       ),
@@ -179,6 +184,115 @@ class _ExportTile extends StatelessWidget {
           : () => context
               .read<SettingsBloc>()
               .add(const ExportTimetableRequested()),
+    );
+  }
+}
+
+class _HardwareCapabilityCard extends StatefulWidget {
+  const _HardwareCapabilityCard();
+
+  @override
+  State<_HardwareCapabilityCard> createState() => _HardwareCapabilityCardState();
+}
+
+class _HardwareCapabilityCardState extends State<_HardwareCapabilityCard> {
+  bool? _bleSupported;
+  bool? _nfcAvailable;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final results = await Future.wait([
+      FlutterBluePlus.isSupported,
+      NfcManager.instance.isAvailable(),
+    ]);
+    if (!mounted) return;
+    setState(() {
+      _bleSupported = results[0];
+      _nfcAvailable = results[1];
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _CapabilityRow(
+                icon: Icons.bluetooth,
+                label: 'Bluetooth',
+                available: _bleSupported,
+              ),
+              const SizedBox(height: 8),
+              _CapabilityRow(
+                icon: Icons.nfc,
+                label: 'NFC',
+                available: _nfcAvailable,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'These capabilities can be used for campus check-in hardware integration.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CapabilityRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool? available;
+
+  const _CapabilityRow({
+    required this.icon,
+    required this.label,
+    required this.available,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(icon, size: 20),
+        const SizedBox(width: 12),
+        Expanded(child: Text(label)),
+        if (available == null)
+          const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        else
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: available! ? cs.primaryContainer : cs.errorContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              available! ? 'Available' : 'Unavailable',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: available! ? cs.onPrimaryContainer : cs.onErrorContainer,
+                  ),
+            ),
+          ),
+      ],
     );
   }
 }
