@@ -1,6 +1,7 @@
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:get_it/get_it.dart';
 import 'package:smart_univ/core/constants/app_constants.dart';
+import 'package:smart_univ/data/local/app_database.dart';
 import 'package:smart_univ/core/network/dio_client.dart';
 import 'package:smart_univ/core/network/logging_interceptor.dart';
 import 'package:smart_univ/core/network/token_provider.dart';
@@ -27,6 +28,12 @@ final sl = GetIt.instance;
 Future<void> initDependencies({void Function()? onAuthExpired}) async {
   // ── Logging ──────────────────────────────────────────────────────────────────
   await LoggingInterceptor.init();
+
+  // ── Local Database ───────────────────────────────────────────────────────────
+  sl.registerLazySingleton(() => AppDatabase());
+  sl.registerLazySingleton(() => sl<AppDatabase>().announcementsDao);
+  sl.registerLazySingleton(() => sl<AppDatabase>().eventsDao);
+  sl.registerLazySingleton(() => sl<AppDatabase>().timetableDao);
 
   // ── Auth0 ────────────────────────────────────────────────────────────────────
   sl.registerLazySingleton<Auth0>(
