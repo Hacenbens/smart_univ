@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 enum PermissionResult {
@@ -63,6 +64,73 @@ class PermissionService {
     } catch (_) {
       return false;
     }
+  }
+
+  /// Shows a pre-rationale dialog explaining WHY [feature] permission is needed,
+  /// before the OS dialog fires.
+  ///
+  /// Returns `true` if the user taps **Continue** (caller should then call
+  /// [requestPermission]), or `false` if they tap **Not Now**.
+  ///
+  /// Per Android guidelines, only show this when
+  /// `shouldShowRequestPermissionRationale()` returns true (i.e. the user
+  /// has denied the permission once before without "never ask again").
+  Future<bool> showRationaleDialog(BuildContext context, String feature) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Permission Required'),
+        content: Text(
+          'SmartCampus needs $feature access to attach photos to your event notes.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Not Now'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  /// Shows a dialog informing the user that [feature] permission was permanently
+  /// denied, and directing them to the OS settings to re-enable it.
+  ///
+  /// **Open Settings** calls [openSettings] and dismisses the dialog.
+  /// The caller must use [PermissionLifecycleMixin] to re-check the permission
+  /// when the user returns from settings.
+  Future<void> showPermanentlyDeniedDialog(
+    BuildContext context,
+    String feature,
+  ) async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('$feature Access Blocked'),
+        content: Text(
+          '$feature access was permanently denied. '
+          'Enable it in Settings to use this feature.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              openSettings();
+            },
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
   }
 
   // ── Platform-call seams (overridable in tests) ──────────────────────────────
