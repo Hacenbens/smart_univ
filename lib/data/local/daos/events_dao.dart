@@ -12,7 +12,7 @@ class EventsDao extends DatabaseAccessor<AppDatabase> with _$EventsDaoMixin {
 
   Future<List<EventRow>> getAll() => select(eventsTable).get();
 
-  Future<void> upsertAll(List<EventRowCompanion> items) =>
+  Future<void> upsertAll(List<EventsTableCompanion> items) =>
       batch((b) => b.insertAll(
             eventsTable,
             items,
