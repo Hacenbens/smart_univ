@@ -10,6 +10,8 @@ import 'package:smart_univ/data/datasources/announcement_local_datasource_impl.d
 import 'package:smart_univ/data/datasources/announcement_remote_datasource.dart';
 import 'package:smart_univ/data/datasources/announcement_remote_datasource_impl.dart';
 import 'package:smart_univ/data/datasources/auth0_token_provider.dart';
+import 'package:smart_univ/data/datasources/event_local_datasource.dart';
+import 'package:smart_univ/data/datasources/event_local_datasource_impl.dart';
 import 'package:smart_univ/data/datasources/event_remote_datasource.dart';
 import 'package:smart_univ/data/datasources/event_remote_datasource_impl.dart';
 import 'package:smart_univ/data/repositories/announcement_repository_impl.dart';
@@ -58,6 +60,9 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
   sl.registerLazySingleton<AnnouncementLocalDataSource>(
     () => AnnouncementLocalDataSourceImpl(sl()),
   );
+  sl.registerLazySingleton<EventLocalDataSource>(
+    () => EventLocalDataSourceImpl(sl()),
+  );
 
   // ── Remote Data Sources ──────────────────────────────────────────────────────
   sl.registerLazySingleton<AnnouncementRemoteDataSource>(
@@ -75,7 +80,10 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
     ),
   );
   sl.registerLazySingleton<EventRepository>(
-    () => EventRepositoryImpl(sl<EventRemoteDataSource>()),
+    () => EventRepositoryImpl(
+      sl<EventRemoteDataSource>(),
+      sl<EventLocalDataSource>(),
+    ),
   );
   sl.registerLazySingleton<AuthRepository>(
     () => StubAuthRepository(),
