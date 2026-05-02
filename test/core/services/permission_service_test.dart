@@ -10,6 +10,12 @@ class _FakePermissionService extends PermissionService {
 
   bool checkCalled = false;
   bool requestCalled = false;
+  bool openSettingsCalled = false;
+
+  // Controls what openSettings() returns in tests.
+  bool openSettingsResult = true;
+  // When true, openSettings() throws instead of returning normally.
+  bool openSettingsThrows = false;
 
   _FakePermissionService(this.stubbedStatus);
 
@@ -23,6 +29,13 @@ class _FakePermissionService extends PermissionService {
   Future<PermissionResult> requestPermission(Permission permission) async {
     requestCalled = true;
     return mapStatus(stubbedStatus);
+  }
+
+  @override
+  Future<bool> openSettings() async {
+    openSettingsCalled = true;
+    if (openSettingsThrows) throw Exception('OEM intent not handled');
+    return openSettingsResult;
   }
 }
 
@@ -96,6 +109,39 @@ void main() {
       expect(fake.requestCalled, isTrue);
       expect(fake.checkCalled, isFalse,
           reason: 'requestPermission must not silently check instead of request');
+    });
+  });
+
+  // ── openSettings ─────────────────────────────────────────────────────────────
+
+  group('openSettings', () {
+    test('returns true when the OS settings page opens successfully', () async {
+      final fake = _FakePermissionService(PermissionStatus.permanentlyDenied)
+        ..openSettingsResult = true;
+
+      final result = await fake.openSettings();
+
+      expect(result, isTrue);
+      expect(fake.openSettingsCalled, isTrue);
+    });
+
+    test('returns false when the OS returns false (settings unavailable)', () async {
+      final fake = _FakePermissionService(PermissionStatus.permanentlyDenied)
+        ..openSettingsResult = false;
+
+      final result = await fake.openSettings();
+
+      expect(result, isFalse);
+    });
+
+    test('returns false instead of throwing on OEM skins that throw', () async {
+      // Simulates MIUI / One UI behaviour where the settings intent throws.
+      final fake = _FakePermissionService(PermissionStatus.permanentlyDenied)
+        ..openSettingsThrows = true;
+
+      final result = await fake.openSettings();
+
+      expect(result, isFalse);
     });
   });
 

@@ -50,6 +50,21 @@ class PermissionService {
     return mapStatus(status);
   }
 
+  /// Deep-links the user to the OS app settings page so they can manually
+  /// toggle a permission that was [PermissionResult.permanentlyDenied] or
+  /// [PermissionResult.restricted].
+  ///
+  /// Returns `true` if the settings page was opened successfully.
+  /// Returns `false` on failure — some Android OEM skins (MIUI, One UI) do
+  /// not handle the intent correctly and throw instead of returning false.
+  Future<bool> openSettings() async {
+    try {
+      return await openAppSettings();
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Maps a raw [PermissionStatus] from permission_handler to [PermissionResult].
   ///
   /// [PermissionStatus.limited] (iOS partial photo library access) maps to
