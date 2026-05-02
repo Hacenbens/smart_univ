@@ -10,3 +10,9 @@ sealed class AnnouncementsEvent extends Equatable {
 final class AnnouncementsRequested extends AnnouncementsEvent {
   const AnnouncementsRequested();
 }
+
+/// Dispatched automatically by the bloc when the app resumes and the last
+/// fetch is older than [AnnouncementsBloc.refreshThreshold].
+final class AppLifecycleRefreshRequested extends AnnouncementsEvent {
+  const AppLifecycleRefreshRequested();
+}
