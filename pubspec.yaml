@@ -57,6 +57,9 @@ dependencies:
   # File system access for debug logging
   path_provider: ^2.1.0
 
+  # Connectivity
+  connectivity_plus: ^6.0.0
+
   # Identity provider
   auth0_flutter: ^2.0.1
 
