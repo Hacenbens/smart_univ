@@ -7,6 +7,11 @@ sealed class SettingsEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-final class ToggleTheme extends SettingsEvent {
-  const ToggleTheme();
+final class SettingsThemeChanged extends SettingsEvent {
+  final ThemeMode themeMode;
+
+  const SettingsThemeChanged(this.themeMode);
+
+  @override
+  List<Object?> get props => [themeMode];
 }
