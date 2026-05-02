@@ -14,7 +14,7 @@ class AnnouncementsDao extends DatabaseAccessor<AppDatabase>
 
   Future<List<AnnouncementRow>> getAll() => select(announcementsTable).get();
 
-  Future<void> upsertAll(List<AnnouncementRowCompanion> items) =>
+  Future<void> upsertAll(List<AnnouncementsTableCompanion> items) =>
       batch((b) => b.insertAll(
             announcementsTable,
             items,

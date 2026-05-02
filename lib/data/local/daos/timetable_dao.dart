@@ -13,7 +13,7 @@ class TimetableDao extends DatabaseAccessor<AppDatabase>
 
   Future<List<TimetableRow>> getAll() => select(timetableTable).get();
 
-  Future<void> upsertAll(List<TimetableRowCompanion> items) =>
+  Future<void> upsertAll(List<TimetableTableCompanion> items) =>
       batch((b) => b.insertAll(
             timetableTable,
             items,
