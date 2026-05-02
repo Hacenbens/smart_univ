@@ -23,10 +23,13 @@ import 'package:smart_univ/data/datasources/event_remote_datasource_impl.dart';
 import 'package:smart_univ/data/repositories/announcement_repository_impl.dart';
 import 'package:smart_univ/data/repositories/event_repository_impl.dart';
 import 'package:smart_univ/data/repositories/stub_auth_repository.dart';
+import 'package:smart_univ/data/repositories/stub_timetable_repository.dart';
 import 'package:smart_univ/domain/repositories/announcement_repository.dart';
 import 'package:smart_univ/domain/repositories/auth_repository.dart';
 import 'package:smart_univ/domain/repositories/event_repository.dart';
+import 'package:smart_univ/domain/repositories/timetable_repository.dart';
 import 'package:smart_univ/core/usecases/app_initialization_use_case.dart';
+import 'package:smart_univ/domain/usecases/export_timetable_use_case.dart';
 import 'package:smart_univ/domain/usecases/get_announcements_use_case.dart';
 import 'package:smart_univ/domain/usecases/get_events_use_case.dart';
 import 'package:smart_univ/features/announcements/presentation/bloc/announcements_bloc.dart';
@@ -103,6 +106,9 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
   sl.registerLazySingleton<AuthRepository>(
     () => StubAuthRepository(),
   );
+  sl.registerLazySingleton<TimetableRepository>(
+    () => StubTimetableRepository(),
+  );
 
   // ── Use Cases ────────────────────────────────────────────────────────────────
   sl.registerLazySingleton(
@@ -110,6 +116,7 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
   );
   sl.registerLazySingleton(() => GetAnnouncementsUseCase(sl<AnnouncementRepository>()));
   sl.registerLazySingleton(() => GetEventsUseCase(sl<EventRepository>()));
+  sl.registerLazySingleton(() => ExportTimetableUseCase(sl<TimetableRepository>()));
 
   // ── BLoCs ───────────────────────────────────────────────────────────────────
   sl.registerFactory(() => AnnouncementsBloc(sl<GetAnnouncementsUseCase>()));
