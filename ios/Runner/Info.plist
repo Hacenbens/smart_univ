@@ -47,6 +47,16 @@
 			</array>
 		</dict>
 	</dict>
+	<!-- Runtime permission usage descriptions — required for App Store submission -->
+	<key>NSCameraUsageDescription</key>
+	<string>SmartCampus uses the camera to scan QR codes for event check-in and to upload a photo to your student profile.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>SmartCampus uses your location to display the campus map, surface nearby events, and show directions between buildings.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>SmartCampus accesses motion sensors to count your daily steps and support indoor positioning across campus buildings.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>SmartCampus uses Bluetooth to detect campus beacons for indoor navigation and automatic check-in at lectures and events.</string>
+
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
