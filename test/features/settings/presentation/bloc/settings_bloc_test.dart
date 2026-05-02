@@ -10,39 +10,48 @@ void main() {
   late MockSettingsService mockSettings;
   late SettingsBloc bloc;
 
-  // Helper — builds a bloc whose service reports [storedValue] as the persisted theme.
-  SettingsBloc buildBloc({String storedValue = 'system'}) {
-    when(() => mockSettings.getThemeMode()).thenReturn(storedValue);
+  SettingsBloc buildBloc({
+    String storedTheme = 'system',
+    String storedLanguage = 'en',
+    bool storedNotifications = true,
+  }) {
+    when(() => mockSettings.getThemeMode()).thenReturn(storedTheme);
+    when(() => mockSettings.getLanguage()).thenReturn(storedLanguage);
+    when(() => mockSettings.getNotificationsEnabled()).thenReturn(storedNotifications);
     return SettingsBloc(mockSettings);
   }
 
-  setUp(() {
-    mockSettings = MockSettingsService();
-  });
-
+  setUp(() => mockSettings = MockSettingsService());
   tearDown(() => bloc.close());
 
+  // ── Initial state ────────────────────────────────────────────────────────────
+
   group('initial state', () {
-    test('defaults to ThemeMode.system when nothing is stored', () {
-      bloc = buildBloc(storedValue: 'system');
-      expect(bloc.state.themeMode, ThemeMode.system);
-    });
-
-    test('restores ThemeMode.light from SharedPreferences on cold start', () {
-      bloc = buildBloc(storedValue: 'light');
-      expect(bloc.state.themeMode, ThemeMode.light);
-    });
-
-    test('restores ThemeMode.dark from SharedPreferences on cold start', () {
-      bloc = buildBloc(storedValue: 'dark');
+    test('reads all three preferences from SettingsService on construction', () {
+      bloc = buildBloc(
+        storedTheme: 'dark',
+        storedLanguage: 'fr',
+        storedNotifications: false,
+      );
       expect(bloc.state.themeMode, ThemeMode.dark);
+      expect(bloc.state.language, 'fr');
+      expect(bloc.state.notificationsEnabled, false);
+    });
+
+    test('defaults to system / en / true when nothing is stored', () {
+      bloc = buildBloc();
+      expect(bloc.state.themeMode, ThemeMode.system);
+      expect(bloc.state.language, 'en');
+      expect(bloc.state.notificationsEnabled, true);
     });
 
     test('falls back to ThemeMode.system for an unknown stored value', () {
-      bloc = buildBloc(storedValue: 'unknown_value');
+      bloc = buildBloc(storedTheme: 'unknown');
       expect(bloc.state.themeMode, ThemeMode.system);
     });
   });
+
+  // ── SettingsThemeChanged ─────────────────────────────────────────────────────
 
   group('SettingsThemeChanged', () {
     setUp(() {
@@ -53,61 +62,149 @@ void main() {
     test('persists the new theme via SettingsService', () async {
       bloc.add(const SettingsThemeChanged(ThemeMode.dark));
       await Future<void>.delayed(Duration.zero);
-
       verify(() => mockSettings.setThemeMode('dark')).called(1);
     });
 
-    test('emits state with updated themeMode', () async {
+    test('emits updated themeMode', () async {
       bloc.add(const SettingsThemeChanged(ThemeMode.light));
-
       await expectLater(
         bloc.stream,
-        emits(const SettingsState(themeMode: ThemeMode.light)),
+        emits(isA<SettingsState>().having(
+          (s) => s.themeMode,
+          'themeMode',
+          ThemeMode.light,
+        )),
       );
     });
 
-    test('persists system mode as "system"', () async {
-      bloc = buildBloc(storedValue: 'dark');
+    test('does not alter language or notifications', () async {
+      bloc = buildBloc(storedLanguage: 'fr', storedNotifications: false);
       when(() => mockSettings.setThemeMode(any())).thenAnswer((_) async {});
 
-      bloc.add(const SettingsThemeChanged(ThemeMode.system));
-      await Future<void>.delayed(Duration.zero);
-
-      verify(() => mockSettings.setThemeMode('system')).called(1);
-    });
-
-    test('each distinct mode change persists exactly once', () async {
       bloc.add(const SettingsThemeChanged(ThemeMode.dark));
-      bloc.add(const SettingsThemeChanged(ThemeMode.light));
       await Future<void>.delayed(Duration.zero);
 
-      verify(() => mockSettings.setThemeMode('dark')).called(1);
-      verify(() => mockSettings.setThemeMode('light')).called(1);
+      expect(bloc.state.language, 'fr');
+      expect(bloc.state.notificationsEnabled, false);
     });
   });
 
-  group('SettingsState', () {
-    test('copyWith updates themeMode', () {
-      const s = SettingsState();
-      expect(s.copyWith(themeMode: ThemeMode.dark).themeMode, ThemeMode.dark);
+  // ── SettingsLanguageChanged ──────────────────────────────────────────────────
+
+  group('SettingsLanguageChanged', () {
+    setUp(() {
+      bloc = buildBloc();
+      when(() => mockSettings.setLanguage(any())).thenAnswer((_) async {});
     });
 
-    test('copyWith without args preserves themeMode', () {
-      const s = SettingsState(themeMode: ThemeMode.light);
-      expect(s.copyWith().themeMode, ThemeMode.light);
+    test('persists the new language code via SettingsService', () async {
+      bloc.add(const SettingsLanguageChanged('fr'));
+      await Future<void>.delayed(Duration.zero);
+      verify(() => mockSettings.setLanguage('fr')).called(1);
     });
 
-    test('equal when themeMode matches', () {
-      expect(
-        const SettingsState(themeMode: ThemeMode.dark),
-        const SettingsState(themeMode: ThemeMode.dark),
+    test('emits updated language', () async {
+      bloc.add(const SettingsLanguageChanged('ar'));
+      await expectLater(
+        bloc.stream,
+        emits(isA<SettingsState>().having(
+          (s) => s.language,
+          'language',
+          'ar',
+        )),
       );
     });
 
-    test('not equal when themeMode differs', () {
+    test('does not alter themeMode or notifications', () async {
+      bloc = buildBloc(storedTheme: 'dark', storedNotifications: false);
+      when(() => mockSettings.setLanguage(any())).thenAnswer((_) async {});
+
+      bloc.add(const SettingsLanguageChanged('fr'));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(bloc.state.themeMode, ThemeMode.dark);
+      expect(bloc.state.notificationsEnabled, false);
+    });
+  });
+
+  // ── SettingsNotificationsChanged ─────────────────────────────────────────────
+
+  group('SettingsNotificationsChanged', () {
+    setUp(() {
+      bloc = buildBloc();
+      when(() => mockSettings.setNotificationsEnabled(any()))
+          .thenAnswer((_) async {});
+    });
+
+    test('persists false via SettingsService when disabled', () async {
+      bloc.add(const SettingsNotificationsChanged(false));
+      await Future<void>.delayed(Duration.zero);
+      verify(() => mockSettings.setNotificationsEnabled(false)).called(1);
+    });
+
+    test('emits notificationsEnabled = false', () async {
+      bloc.add(const SettingsNotificationsChanged(false));
+      await expectLater(
+        bloc.stream,
+        emits(isA<SettingsState>().having(
+          (s) => s.notificationsEnabled,
+          'notificationsEnabled',
+          false,
+        )),
+      );
+    });
+
+    test('re-enabling persists true', () async {
+      bloc = buildBloc(storedNotifications: false);
+      when(() => mockSettings.setNotificationsEnabled(any()))
+          .thenAnswer((_) async {});
+
+      bloc.add(const SettingsNotificationsChanged(true));
+      await Future<void>.delayed(Duration.zero);
+      verify(() => mockSettings.setNotificationsEnabled(true)).called(1);
+    });
+
+    test('does not alter themeMode or language', () async {
+      bloc = buildBloc(storedTheme: 'dark', storedLanguage: 'fr');
+      when(() => mockSettings.setNotificationsEnabled(any()))
+          .thenAnswer((_) async {});
+
+      bloc.add(const SettingsNotificationsChanged(false));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(bloc.state.themeMode, ThemeMode.dark);
+      expect(bloc.state.language, 'fr');
+    });
+  });
+
+  // ── SettingsState ────────────────────────────────────────────────────────────
+
+  group('SettingsState', () {
+    test('copyWith updates only the specified field', () {
+      const s = SettingsState(
+        themeMode: ThemeMode.dark,
+        language: 'fr',
+        notificationsEnabled: false,
+      );
+      final updated = s.copyWith(language: 'ar');
+      expect(updated.language, 'ar');
+      expect(updated.themeMode, ThemeMode.dark);
+      expect(updated.notificationsEnabled, false);
+    });
+
+    test('two states with identical fields are equal', () {
       expect(
-        const SettingsState(themeMode: ThemeMode.light),
-        isNot(const SettingsState(themeMode: ThemeMode.dark)),
+        const SettingsState(
+            themeMode: ThemeMode.dark, language: 'fr', notificationsEnabled: false),
+        const SettingsState(
+            themeMode: ThemeMode.dark, language: 'fr', notificationsEnabled: false),
+      );
+    });
+
+    test('states differing in language are not equal', () {
+      expect(
+        const SettingsState(language: 'en'),
+        isNot(const SettingsState(language: 'fr')),
       );
     });
   });

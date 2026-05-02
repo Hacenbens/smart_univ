@@ -13,18 +13,37 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       : super(
           SettingsState(
             themeMode: _themeModeFromString(_settings.getThemeMode()),
+            language: _settings.getLanguage(),
+            notificationsEnabled: _settings.getNotificationsEnabled(),
           ),
         ) {
     on<SettingsThemeChanged>(_onThemeChanged);
+    on<SettingsLanguageChanged>(_onLanguageChanged);
+    on<SettingsNotificationsChanged>(_onNotificationsChanged);
   }
 
-  // ThemeMode.name returns 'system' | 'light' | 'dark' — matches storage format.
   Future<void> _onThemeChanged(
     SettingsThemeChanged event,
     Emitter<SettingsState> emit,
   ) async {
     await _settings.setThemeMode(event.themeMode.name);
     emit(state.copyWith(themeMode: event.themeMode));
+  }
+
+  Future<void> _onLanguageChanged(
+    SettingsLanguageChanged event,
+    Emitter<SettingsState> emit,
+  ) async {
+    await _settings.setLanguage(event.languageCode);
+    emit(state.copyWith(language: event.languageCode));
+  }
+
+  Future<void> _onNotificationsChanged(
+    SettingsNotificationsChanged event,
+    Emitter<SettingsState> emit,
+  ) async {
+    await _settings.setNotificationsEnabled(event.enabled);
+    emit(state.copyWith(notificationsEnabled: event.enabled));
   }
 
   static ThemeMode _themeModeFromString(String value) => switch (value) {

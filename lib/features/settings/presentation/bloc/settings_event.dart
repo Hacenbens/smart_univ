@@ -15,3 +15,21 @@ final class SettingsThemeChanged extends SettingsEvent {
   @override
   List<Object?> get props => [themeMode];
 }
+
+final class SettingsLanguageChanged extends SettingsEvent {
+  final String languageCode;
+
+  const SettingsLanguageChanged(this.languageCode);
+
+  @override
+  List<Object?> get props => [languageCode];
+}
+
+final class SettingsNotificationsChanged extends SettingsEvent {
+  final bool enabled;
+
+  const SettingsNotificationsChanged(this.enabled);
+
+  @override
+  List<Object?> get props => [enabled];
+}
