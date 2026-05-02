@@ -16,3 +16,8 @@ final class AnnouncementsRequested extends AnnouncementsEvent {
 final class AppLifecycleRefreshRequested extends AnnouncementsEvent {
   const AppLifecycleRefreshRequested();
 }
+
+/// Dispatched internally when a shake gesture is detected.
+final class AnnouncementsRefreshRequested extends AnnouncementsEvent {
+  const AnnouncementsRefreshRequested();
+}
