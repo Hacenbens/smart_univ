@@ -1,6 +1,7 @@
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:get_it/get_it.dart';
 import 'package:smart_univ/core/constants/app_constants.dart';
+import 'package:smart_univ/core/cubit/connectivity_cubit.dart';
 import 'package:smart_univ/core/services/connectivity_service.dart';
 import 'package:smart_univ/data/local/app_database.dart';
 import 'package:smart_univ/core/network/dio_client.dart';
@@ -36,6 +37,7 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
 
   // ── Services ─────────────────────────────────────────────────────────────────
   sl.registerLazySingleton(() => ConnectivityService());
+  sl.registerLazySingleton(() => ConnectivityCubit(sl<ConnectivityService>()));
 
   // ── Local Database ───────────────────────────────────────────────────────────
   sl.registerLazySingleton(() => AppDatabase());
