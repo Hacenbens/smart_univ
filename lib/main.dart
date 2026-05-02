@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:smart_univ/core/cubit/connectivity_cubit.dart';
 import 'package:smart_univ/core/di/injection_container.dart';
 import 'package:smart_univ/core/router/app_router.dart';
 import 'package:smart_univ/core/router/auth_state.dart';
@@ -36,6 +37,7 @@ class _SmartCampusAppState extends State<SmartCampusApp> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider(create: (_) => sl<ConnectivityCubit>()),
         BlocProvider(create: (_) => sl<AnnouncementsBloc>()),
         BlocProvider(create: (_) => sl<EventsBloc>()),
         BlocProvider(create: (_) => sl<AuthBloc>()),

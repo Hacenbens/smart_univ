@@ -1,5 +1,6 @@
 import 'package:smart_univ/core/either.dart';
 import 'package:smart_univ/core/error/app_exception.dart';
+import 'package:smart_univ/core/services/connectivity_service.dart';
 import 'package:smart_univ/data/datasources/announcement_local_datasource.dart';
 import 'package:smart_univ/data/datasources/announcement_remote_datasource.dart';
 import 'package:smart_univ/domain/entities/announcement.dart';
@@ -10,8 +11,9 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
 
   final AnnouncementRemoteDataSource _remote;
   final AnnouncementLocalDataSource _local;
+  final ConnectivityService _connectivity;
 
-  AnnouncementRepositoryImpl(this._remote, this._local);
+  AnnouncementRepositoryImpl(this._remote, this._local, this._connectivity);
 
   @override
   Future<Either<AppException, List<Announcement>>> getAnnouncements() async {
@@ -26,13 +28,24 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
       return right(cached.map((dto) => dto.toDomain()).toList());
     }
 
-    // (3) Cache is stale or empty — fetch from remote.
+    // (3) No connection — serve stale cache or fail fast.
+    if (!await _connectivity.isConnected()) {
+      if (cachedAt != null) {
+        final cached = await _local.getCachedAnnouncements();
+        if (cached.isNotEmpty) {
+          return right(cached.map((dto) => dto.toDomain()).toList());
+        }
+      }
+      return left(const NetworkException('No internet connection and no cached data'));
+    }
+
+    // (4) Cache is stale or empty and connected — fetch from remote.
     try {
       final dtos = await _remote.getAnnouncements();
       await _local.cacheAnnouncements(dtos);
       return right(dtos.map((dto) => dto.toDomain()).toList());
     } on AppException catch (e) {
-      // (4) Network failed — serve stale cache if available.
+      // (5) Network failed mid-flight — serve stale cache if available.
       if (cachedAt != null) {
         final cached = await _local.getCachedAnnouncements();
         if (cached.isNotEmpty) {

@@ -1,6 +1,8 @@
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:get_it/get_it.dart';
 import 'package:smart_univ/core/constants/app_constants.dart';
+import 'package:smart_univ/core/cubit/connectivity_cubit.dart';
+import 'package:smart_univ/core/services/connectivity_service.dart';
 import 'package:smart_univ/data/local/app_database.dart';
 import 'package:smart_univ/core/network/dio_client.dart';
 import 'package:smart_univ/core/network/logging_interceptor.dart';
@@ -32,6 +34,10 @@ final sl = GetIt.instance;
 Future<void> initDependencies({void Function()? onAuthExpired}) async {
   // ── Logging ──────────────────────────────────────────────────────────────────
   await LoggingInterceptor.init();
+
+  // ── Services ─────────────────────────────────────────────────────────────────
+  sl.registerLazySingleton(() => ConnectivityService());
+  sl.registerLazySingleton(() => ConnectivityCubit(sl<ConnectivityService>()));
 
   // ── Local Database ───────────────────────────────────────────────────────────
   sl.registerLazySingleton(() => AppDatabase());
@@ -77,12 +83,14 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
     () => AnnouncementRepositoryImpl(
       sl<AnnouncementRemoteDataSource>(),
       sl<AnnouncementLocalDataSource>(),
+      sl<ConnectivityService>(),
     ),
   );
   sl.registerLazySingleton<EventRepository>(
     () => EventRepositoryImpl(
       sl<EventRemoteDataSource>(),
       sl<EventLocalDataSource>(),
+      sl<ConnectivityService>(),
     ),
   );
   sl.registerLazySingleton<AuthRepository>(

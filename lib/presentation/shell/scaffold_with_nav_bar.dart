@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smart_univ/core/cubit/connectivity_cubit.dart';
 
 class ScaffoldWithNavBar extends StatelessWidget {
   final Widget child;
@@ -16,7 +18,29 @@ class ScaffoldWithNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: child,
+      body: Column(
+        children: [
+          BlocBuilder<ConnectivityCubit, bool>(
+            builder: (context, isConnected) => AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              height: isConnected ? 0 : 32,
+              color: Colors.amber.shade700,
+              child: ClipRect(
+                child: Center(
+                  child: Text(
+                    'You are offline — showing cached content',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(child: child),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex(context),
         onDestinationSelected: (index) => context.go(_tabs[index]),
