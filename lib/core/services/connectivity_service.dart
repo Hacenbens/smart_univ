@@ -1,4 +1,5 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:smart_univ/core/extensions/stream_extensions.dart';
 
 class ConnectivityService {
   final Connectivity _connectivity;
@@ -13,7 +14,8 @@ class ConnectivityService {
 
   Stream<bool> get onConnectivityChanged => _connectivity
       .onConnectivityChanged
-      .map((results) => _hasConnection(results));
+      .map((results) => _hasConnection(results))
+      .debounce(const Duration(seconds: 2));
 
   bool _hasConnection(List<ConnectivityResult> results) =>
       results.any((r) => r != ConnectivityResult.none);
