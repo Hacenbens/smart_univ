@@ -33,6 +33,7 @@ import 'package:smart_univ/domain/repositories/timetable_repository.dart';
 import 'package:smart_univ/core/usecases/app_initialization_use_case.dart';
 import 'package:smart_univ/domain/usecases/export_timetable_use_case.dart';
 import 'package:smart_univ/domain/usecases/get_announcements_use_case.dart';
+import 'package:smart_univ/domain/usecases/attach_photo_use_case.dart';
 import 'package:smart_univ/domain/usecases/get_events_use_case.dart';
 import 'package:smart_univ/features/announcements/presentation/bloc/announcements_bloc.dart';
 import 'package:smart_univ/features/auth/presentation/bloc/auth_bloc.dart';
@@ -120,11 +121,20 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
   );
   sl.registerLazySingleton(() => GetAnnouncementsUseCase(sl<AnnouncementRepository>()));
   sl.registerLazySingleton(() => GetEventsUseCase(sl<EventRepository>()));
+  sl.registerLazySingleton(
+    () => AttachPhotoUseCase(sl<CameraService>(), sl<PermissionService>()),
+  );
   sl.registerLazySingleton(() => ExportTimetableUseCase(sl<TimetableRepository>()));
 
   // ── BLoCs ───────────────────────────────────────────────────────────────────
   sl.registerFactory(() => AnnouncementsBloc(sl<GetAnnouncementsUseCase>()));
-  sl.registerFactory(() => EventsBloc(sl<GetEventsUseCase>()));
+  sl.registerFactory(
+    () => EventsBloc(
+      sl<GetEventsUseCase>(),
+      sl<AttachPhotoUseCase>(),
+      sl<EventRepository>(),
+    ),
+  );
   sl.registerFactory(() => AuthBloc(sl()));
   sl.registerFactory(
     () => SettingsBloc(sl<SettingsService>(), sl<ExportTimetableUseCase>()),

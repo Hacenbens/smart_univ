@@ -12,12 +12,29 @@ class EventsDao extends DatabaseAccessor<AppDatabase> with _$EventsDaoMixin {
 
   Future<List<EventRow>> getAll() => select(eventsTable).get();
 
+  // Uses ON CONFLICT DO UPDATE targeting only network-sourced columns so that
+  // a user-set photoPath is preserved across cache refreshes.
   Future<void> upsertAll(List<EventsTableCompanion> items) =>
-      batch((b) => b.insertAll(
+      batch((b) {
+        for (final item in items) {
+          b.insert(
             eventsTable,
-            items,
-            mode: InsertMode.insertOrReplace,
-          ));
+            item,
+            onConflict: DoUpdate(
+              (_) => EventsTableCompanion(
+                title: item.title,
+                startTime: item.startTime,
+                location: item.location,
+                cachedAt: item.cachedAt,
+              ),
+            ),
+          );
+        }
+      });
+
+  Future<void> updatePhotoPath(int id, String path) =>
+      (update(eventsTable)..where((t) => t.id.equals(id)))
+          .write(EventsTableCompanion(photoPath: Value(path)));
 
   Future<int> deleteOlderThan(DateTime cutoff) =>
       (delete(eventsTable)

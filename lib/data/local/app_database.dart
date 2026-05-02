@@ -26,6 +26,7 @@ class EventsTable extends Table {
   DateTimeColumn get startTime => dateTime()();
   TextColumn get location => text()();
   DateTimeColumn get cachedAt => dateTime()();
+  TextColumn get photoPath => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -52,7 +53,16 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.addColumn(eventsTable, eventsTable.photoPath);
+          }
+        },
+      );
 
   static QueryExecutor _openConnection() {
     return driftDatabase(name: 'smart_univ_db');

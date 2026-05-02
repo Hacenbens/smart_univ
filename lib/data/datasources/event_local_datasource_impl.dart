@@ -43,10 +43,15 @@ class EventLocalDataSourceImpl implements EventLocalDataSource {
     return rows.map((r) => r.cachedAt).reduce((a, b) => a.isBefore(b) ? a : b);
   }
 
+  @override
+  Future<void> updateEventPhotoPath(int id, String path) =>
+      _dao.updatePhotoPath(id, path);
+
   EventDto _rowToDto(EventRow row) => EventDto(
         id: row.id,
         title: row.title,
         body: '',
         userId: 0,
+        photoPath: row.photoPath,
       );
 }

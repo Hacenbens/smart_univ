@@ -13,11 +13,12 @@ final class EventsLoading extends EventsState {}
 
 final class EventsLoaded extends EventsState {
   final List<Event> events;
+  final String? photoAttachError;
 
-  const EventsLoaded(this.events);
+  const EventsLoaded(this.events, {this.photoAttachError});
 
   @override
-  List<Object?> get props => [events];
+  List<Object?> get props => [events, photoAttachError];
 }
 
 final class EventsFailure extends EventsState {
