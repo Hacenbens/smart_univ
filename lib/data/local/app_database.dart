@@ -1,8 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
+import 'daos/announcements_dao.dart';
+
 part 'app_database.g.dart';
 
+@DataClassName('AnnouncementRow')
 class AnnouncementsTable extends Table {
   IntColumn get id => integer()();
   TextColumn get title => text()();
@@ -14,6 +17,7 @@ class AnnouncementsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@DataClassName('EventRow')
 class EventsTable extends Table {
   IntColumn get id => integer()();
   TextColumn get title => text()();
@@ -25,6 +29,7 @@ class EventsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@DataClassName('TimetableRow')
 class TimetableTable extends Table {
   IntColumn get id => integer()();
   TextColumn get courseCode => text()();
@@ -37,7 +42,10 @@ class TimetableTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [AnnouncementsTable, EventsTable, TimetableTable])
+@DriftDatabase(
+  tables: [AnnouncementsTable, EventsTable, TimetableTable],
+  daos: [AnnouncementsDao],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
