@@ -34,6 +34,13 @@ class AnnouncementLocalDataSourceImpl implements AnnouncementLocalDataSource {
   Stream<List<AnnouncementDto>> watchAnnouncements() =>
       _dao.watchAll().map((rows) => rows.map(_rowToDto).toList());
 
+  @override
+  Future<DateTime?> getLastCachedAt() async {
+    final rows = await _dao.getAll();
+    if (rows.isEmpty) return null;
+    return rows.map((r) => r.cachedAt).reduce((a, b) => a.isBefore(b) ? a : b);
+  }
+
   AnnouncementDto _rowToDto(AnnouncementRow row) => AnnouncementDto(
         id: row.id,
         title: row.title,

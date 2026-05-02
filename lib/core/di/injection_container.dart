@@ -5,6 +5,8 @@ import 'package:smart_univ/data/local/app_database.dart';
 import 'package:smart_univ/core/network/dio_client.dart';
 import 'package:smart_univ/core/network/logging_interceptor.dart';
 import 'package:smart_univ/core/network/token_provider.dart';
+import 'package:smart_univ/data/datasources/announcement_local_datasource.dart';
+import 'package:smart_univ/data/datasources/announcement_local_datasource_impl.dart';
 import 'package:smart_univ/data/datasources/announcement_remote_datasource.dart';
 import 'package:smart_univ/data/datasources/announcement_remote_datasource_impl.dart';
 import 'package:smart_univ/data/datasources/auth0_token_provider.dart';
@@ -52,6 +54,11 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
     ),
   );
 
+  // ── Local Data Sources ───────────────────────────────────────────────────────
+  sl.registerLazySingleton<AnnouncementLocalDataSource>(
+    () => AnnouncementLocalDataSourceImpl(sl()),
+  );
+
   // ── Remote Data Sources ──────────────────────────────────────────────────────
   sl.registerLazySingleton<AnnouncementRemoteDataSource>(
     () => AnnouncementRemoteDataSourceImpl(sl<DioClient>()),
@@ -62,7 +69,10 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
 
   // ── Repositories ────────────────────────────────────────────────────────────
   sl.registerLazySingleton<AnnouncementRepository>(
-    () => AnnouncementRepositoryImpl(sl<AnnouncementRemoteDataSource>()),
+    () => AnnouncementRepositoryImpl(
+      sl<AnnouncementRemoteDataSource>(),
+      sl<AnnouncementLocalDataSource>(),
+    ),
   );
   sl.registerLazySingleton<EventRepository>(
     () => EventRepositoryImpl(sl<EventRemoteDataSource>()),
