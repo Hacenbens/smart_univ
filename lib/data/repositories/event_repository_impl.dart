@@ -68,4 +68,14 @@ class EventRepositoryImpl implements EventRepository {
       },
     );
   }
+
+  @override
+  Future<Either<AppException, Unit>> updateEventPhoto(String id, String path) async {
+    try {
+      await _local.updateEventPhotoPath(int.parse(id), path);
+      return right(unit);
+    } catch (e) {
+      return left(CacheException('Failed to save photo path: $e'));
+    }
+  }
 }

@@ -9,12 +9,15 @@ class EventDto {
   final String title;
   final String body;
   final int userId;
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  final String? photoPath;
 
   const EventDto({
     required this.id,
     required this.title,
     required this.body,
     required this.userId,
+    this.photoPath,
   });
 
   factory EventDto.fromJson(Map<String, dynamic> json) =>
@@ -31,6 +34,7 @@ class EventDto {
       startTime: base.copyWith(hour: 9),
       endTime: base.copyWith(hour: 11),
       location: 'Hall ${(id % 5) + 1}',
+      photoPath: photoPath,
     );
   }
 }

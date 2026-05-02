@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:smart_univ/core/di/injection_container.dart';
+import 'package:smart_univ/core/services/camera_service.dart';
 import 'package:smart_univ/core/services/permission_service.dart';
 import 'package:smart_univ/domain/repositories/announcement_repository.dart';
 import 'package:smart_univ/domain/repositories/auth_repository.dart';
@@ -32,6 +33,14 @@ void main() {
 
       test('PermissionService returns same instance each call', () {
         expect(sl<PermissionService>(), same(sl<PermissionService>()));
+      });
+
+      test('CameraService resolves', () {
+        expect(sl<CameraService>(), isA<CameraService>());
+      });
+
+      test('CameraService returns same instance each call', () {
+        expect(sl<CameraService>(), same(sl<CameraService>()));
       });
     });
 

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_univ/core/widgets/widgets.dart';
 import 'package:smart_univ/domain/entities/event.dart';
 import 'package:smart_univ/features/events/presentation/bloc/events_bloc.dart';
+import 'package:smart_univ/features/events/presentation/pages/event_detail_page.dart';
 
 class EventsPage extends StatelessWidget {
   const EventsPage({super.key});
@@ -55,7 +56,10 @@ class _EventList extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         itemCount: events.length,
         separatorBuilder: (_, _) => const SizedBox(height: 12),
-        itemBuilder: (context, index) => _EventCard(event: events[index]),
+        itemBuilder: (context, index) => _EventCard(
+          event: events[index],
+          bloc: context.read<EventsBloc>(),
+        ),
       ),
     );
   }
@@ -63,8 +67,9 @@ class _EventList extends StatelessWidget {
 
 class _EventCard extends StatelessWidget {
   final Event event;
+  final EventsBloc bloc;
 
-  const _EventCard({required this.event});
+  const _EventCard({required this.event, required this.bloc});
 
   @override
   Widget build(BuildContext context) {
@@ -72,41 +77,52 @@ class _EventCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(event.title, style: tt.titleMedium),
-            const SizedBox(height: 6),
-            Text(
-              event.description,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => BlocProvider.value(
+              value: bloc,
+              child: EventDetailPage(eventId: event.id),
             ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Icon(Icons.location_on_outlined, size: 14, color: cs.outline),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    event.location,
-                    style: tt.labelSmall?.copyWith(color: cs.outline),
-                    overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(event.title, style: tt.titleMedium),
+              const SizedBox(height: 6),
+              Text(
+                event.description,
+                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Icon(Icons.location_on_outlined, size: 14, color: cs.outline),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      event.location,
+                      style: tt.labelSmall?.copyWith(color: cs.outline),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Icon(Icons.schedule_outlined, size: 14, color: cs.outline),
-                const SizedBox(width: 4),
-                Text(
-                  _formatTime(event.startTime),
-                  style: tt.labelSmall?.copyWith(color: cs.outline),
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(width: 8),
+                  Icon(Icons.schedule_outlined, size: 14, color: cs.outline),
+                  const SizedBox(width: 4),
+                  Text(
+                    _formatTime(event.startTime),
+                    style: tt.labelSmall?.copyWith(color: cs.outline),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
