@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_univ/core/constants/app_constants.dart';
 import 'package:smart_univ/core/cubit/connectivity_cubit.dart';
 import 'package:smart_univ/core/services/connectivity_service.dart';
+import 'package:smart_univ/core/services/camera_service.dart';
 import 'package:smart_univ/core/services/permission_service.dart';
 import 'package:smart_univ/core/services/settings_service.dart';
 import 'package:smart_univ/data/local/app_database.dart';
@@ -50,6 +51,7 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
   sl.registerLazySingleton(() => ConnectivityService());
   sl.registerLazySingleton(() => ConnectivityCubit(sl<ConnectivityService>()));
   sl.registerLazySingleton(() => PermissionService());
+  sl.registerLazySingleton(() => CameraService());
 
   // ── Local Database ───────────────────────────────────────────────────────────
   sl.registerLazySingleton(() => AppDatabase());

@@ -63,6 +63,9 @@ dependencies:
   # Runtime permission requests
   permission_handler: ^11.3.1
 
+  # Camera and gallery image picking
+  image_picker: ^1.1.2
+
   # Connectivity
   connectivity_plus: ^6.0.0
 
