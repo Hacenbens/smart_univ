@@ -2,6 +2,8 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import 'daos/announcements_dao.dart';
+import 'daos/events_dao.dart';
+import 'daos/timetable_dao.dart';
 
 part 'app_database.g.dart';
 
@@ -44,7 +46,7 @@ class TimetableTable extends Table {
 
 @DriftDatabase(
   tables: [AnnouncementsTable, EventsTable, TimetableTable],
-  daos: [AnnouncementsDao],
+  daos: [AnnouncementsDao, EventsDao, TimetableDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
