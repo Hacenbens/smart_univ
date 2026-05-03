@@ -24,4 +24,9 @@ class SettingsService {
 
   bool getNotificationsEnabled() =>
       _prefs.getBool(_keyNotifications) ?? true;
+
+  /// `true` once [setNotificationsEnabled] has been called at least once,
+  /// meaning the permission prompt has already been shown to the user.
+  bool get hasRequestedNotificationPermission =>
+      _prefs.containsKey(_keyNotifications);
 }

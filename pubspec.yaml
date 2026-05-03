@@ -66,6 +66,10 @@ dependencies:
   # Camera and gallery image picking
   image_picker: ^1.1.2
 
+  # Local notifications and scheduling
+  flutter_local_notifications: ^18.0.1
+  flutter_timezone: ^1.0.4
+
   # Accelerometer / motion sensors
   sensors_plus: ^7.0.0
 

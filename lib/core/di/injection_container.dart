@@ -6,6 +6,7 @@ import 'package:smart_univ/core/cubit/connectivity_cubit.dart';
 import 'package:smart_univ/core/services/connectivity_service.dart';
 import 'package:smart_univ/core/services/camera_service.dart';
 import 'package:smart_univ/core/services/location_service.dart';
+import 'package:smart_univ/core/services/notification_service.dart';
 import 'package:smart_univ/core/services/shake_detector_service.dart';
 import 'package:smart_univ/core/services/permission_service.dart';
 import 'package:smart_univ/core/services/settings_service.dart';
@@ -58,6 +59,7 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
   sl.registerLazySingleton(() => CameraService());
   sl.registerLazySingleton(() => LocationService(sl<PermissionService>()));
   sl.registerLazySingleton(() => ShakeDetectorService());
+  sl.registerLazySingleton(() => NotificationService());
 
   // ── Local Database ───────────────────────────────────────────────────────────
   sl.registerLazySingleton(() => AppDatabase());
