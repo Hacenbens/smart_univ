@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -24,6 +25,20 @@ import 'package:smart_univ/features/events/presentation/bloc/events_bloc.dart';
 import 'package:smart_univ/features/home/presentation/bloc/home_bloc.dart';
 import 'package:smart_univ/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:smart_univ/features/timetable/presentation/bloc/timetable_bloc.dart';
+
+/// iOS BGTaskScheduler entry point — called by the headless FlutterEngine in
+/// AppDelegate. Registers a MethodChannel handler so Swift can invoke the sync.
+@pragma('vm:entry-point')
+Future<void> backgroundMain() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initDependencies();
+  const channel = MethodChannel('com.smartcampus/background_sync');
+  channel.setMethodCallHandler((call) async {
+    if (call.method == 'announcementSync') {
+      await sl<AnnouncementSyncUseCase>().call();
+    }
+  });
+}
 
 // Must be a top-level function so WorkManager's background isolate can resolve
 // the symbol. The @pragma prevents AOT tree-shaking in release builds.
