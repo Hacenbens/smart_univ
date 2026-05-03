@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:smart_univ/core/widgets/rationale_dialog.dart';
 
 enum PermissionResult {
   /// The user granted the permission.
@@ -76,26 +77,22 @@ class PermissionService {
   /// `shouldShowRequestPermissionRationale()` returns true (i.e. the user
   /// has denied the permission once before without "never ask again").
   Future<bool> showRationaleDialog(BuildContext context, String feature) async {
-    final result = await showDialog<bool>(
+    bool result = false;
+    await showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Permission Required'),
-        content: Text(
-          'SmartCampus needs $feature access to attach photos to your event notes.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Not Now'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Continue'),
-          ),
-        ],
+      builder: (ctx) => RationaleDialog(
+        title: 'Permission Required',
+        body: 'SmartCampus needs $feature access to attach photos to your event notes.',
+        allowLabel: 'Continue',
+        denyLabel: 'Not Now',
+        onAllow: () {
+          result = true;
+          Navigator.of(ctx).pop();
+        },
+        onDeny: () => Navigator.of(ctx).pop(),
       ),
     );
-    return result ?? false;
+    return result;
   }
 
   /// Shows a dialog informing the user that [feature] permission was permanently
@@ -110,25 +107,17 @@ class PermissionService {
   ) async {
     await showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('$feature Access Blocked'),
-        content: Text(
-          '$feature access was permanently denied. '
-          'Enable it in Settings to use this feature.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              openSettings();
-            },
-            child: const Text('Open Settings'),
-          ),
-        ],
+      builder: (ctx) => RationaleDialog(
+        title: '$feature Access Blocked',
+        body: '$feature access was permanently denied. '
+            'Enable it in Settings to use this feature.',
+        allowLabel: 'Open Settings',
+        denyLabel: 'Cancel',
+        onAllow: () {
+          Navigator.of(ctx).pop();
+          openSettings();
+        },
+        onDeny: () => Navigator.of(ctx).pop(),
       ),
     );
   }
