@@ -40,6 +40,7 @@ import 'package:smart_univ/domain/usecases/get_events_use_case.dart';
 import 'package:smart_univ/features/announcements/presentation/bloc/announcements_bloc.dart';
 import 'package:smart_univ/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:smart_univ/features/events/presentation/bloc/events_bloc.dart';
+import 'package:smart_univ/features/home/presentation/bloc/home_bloc.dart';
 import 'package:smart_univ/features/settings/presentation/bloc/settings_bloc.dart';
 
 final sl = GetIt.instance;
@@ -131,9 +132,8 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
   sl.registerLazySingleton(() => ExportTimetableUseCase(sl<TimetableRepository>()));
 
   // ── BLoCs ───────────────────────────────────────────────────────────────────
-  sl.registerFactory(
-    () => AnnouncementsBloc(sl<GetAnnouncementsUseCase>(), sl<ShakeDetectorService>()),
-  );
+  sl.registerFactory(() => HomeBloc(sl<ShakeDetectorService>()));
+  sl.registerFactory(() => AnnouncementsBloc(sl<GetAnnouncementsUseCase>()));
   sl.registerFactory(
     () => EventsBloc(
       sl<GetEventsUseCase>(),

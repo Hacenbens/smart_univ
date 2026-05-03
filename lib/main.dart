@@ -10,6 +10,7 @@ import 'package:smart_univ/core/theme/app_theme.dart';
 import 'package:smart_univ/features/announcements/presentation/bloc/announcements_bloc.dart';
 import 'package:smart_univ/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:smart_univ/features/events/presentation/bloc/events_bloc.dart';
+import 'package:smart_univ/features/home/presentation/bloc/home_bloc.dart';
 import 'package:smart_univ/features/settings/presentation/bloc/settings_bloc.dart';
 
 void main() async {
@@ -42,6 +43,7 @@ class _SmartCampusAppState extends State<SmartCampusApp> {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => sl<ConnectivityCubit>()),
+        BlocProvider(create: (_) => sl<HomeBloc>()),
         BlocProvider(create: (_) => sl<AnnouncementsBloc>()),
         BlocProvider(create: (_) => sl<EventsBloc>()),
         BlocProvider(create: (_) => sl<AuthBloc>()),
