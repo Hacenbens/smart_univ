@@ -155,8 +155,8 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
       sl<EventRepository>(),
     ),
   );
-  sl.registerFactory(() => AuthBloc(sl()));
+  sl.registerFactory(() => AuthBloc(sl(), sl<NotificationService>()));
   sl.registerFactory(
-    () => SettingsBloc(sl<SettingsService>(), sl<ExportTimetableUseCase>()),
+    () => SettingsBloc(sl<SettingsService>(), sl<ExportTimetableUseCase>(), sl<NotificationService>()),
   );
 }
