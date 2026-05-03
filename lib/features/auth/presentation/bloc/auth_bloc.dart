@@ -7,20 +7,36 @@ part 'auth_event.dart';
 part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthBlocState> {
-  // ignore: unused_field — will be used in Week 2
   final AuthRepository _repository;
   final NotificationService _notif;
 
   AuthBloc(this._repository, this._notif) : super(AuthInitial()) {
+    on<AuthCheckRequested>(_onCheckRequested);
     on<AuthSignInRequested>(_onSignInRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
+  }
+
+  Future<void> _onCheckRequested(
+    AuthCheckRequested event,
+    Emitter<AuthBlocState> emit,
+  ) async {
+    final loggedIn = await _repository.isLoggedIn();
+    emit(loggedIn ? const AuthAuthenticated() : const AuthUnauthenticated());
   }
 
   Future<void> _onSignInRequested(
     AuthSignInRequested event,
     Emitter<AuthBlocState> emit,
   ) async {
-    // TODO(week-2): call _repository.signIn and emit AuthAuthenticated/AuthFailure
+    emit(const AuthLoading());
+    final result = await _repository.signIn(
+      email: event.email,
+      password: event.password,
+    );
+    result.fold(
+      (failure) => emit(AuthFailure(failure.message)),
+      (_) => emit(const AuthAuthenticated()),
+    );
   }
 
   Future<void> _onSignOutRequested(
@@ -28,6 +44,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthBlocState> {
     Emitter<AuthBlocState> emit,
   ) async {
     await _notif.cancelAll();
-    emit(AuthUnauthenticated());
+    await _repository.signOut();
+    emit(const AuthUnauthenticated());
   }
 }

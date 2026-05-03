@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -136,12 +137,27 @@ class SmartCampusApp extends StatefulWidget {
 }
 
 class _SmartCampusAppState extends State<SmartCampusApp> {
+  late final AuthBloc _authBloc;
   final AuthState _authState = AuthState();
-  late final AppRouter _appRouter =
-      AppRouter(_authState, initialLocation: widget.initialLocation);
+  late final AppRouter _appRouter;
+  late final StreamSubscription<AuthBlocState> _authSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _authBloc = sl<AuthBloc>();
+    _appRouter = AppRouter(_authState, initialLocation: widget.initialLocation);
+    _authSub = _authBloc.stream.listen((state) {
+      if (state is AuthAuthenticated) _authState.login();
+      if (state is AuthUnauthenticated) _authState.logout();
+    });
+    _authBloc.add(const AuthCheckRequested());
+  }
 
   @override
   void dispose() {
+    _authSub.cancel();
+    _authBloc.close();
     _authState.dispose();
     super.dispose();
   }
@@ -150,11 +166,11 @@ class _SmartCampusAppState extends State<SmartCampusApp> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider.value(value: _authBloc),
         BlocProvider(create: (_) => sl<ConnectivityCubit>()),
         BlocProvider(create: (_) => sl<HomeBloc>()),
         BlocProvider(create: (_) => sl<AnnouncementsBloc>()),
         BlocProvider(create: (_) => sl<EventsBloc>()),
-        BlocProvider(create: (_) => sl<AuthBloc>()),
         BlocProvider(create: (_) => sl<SettingsBloc>()),
         BlocProvider(create: (_) => sl<TimetableBloc>()),
       ],
