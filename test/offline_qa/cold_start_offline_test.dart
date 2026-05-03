@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:bloc_test/bloc_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:smart_univ/core/cubit/connectivity_cubit.dart';
 import 'package:smart_univ/core/either.dart';
@@ -22,12 +23,15 @@ import 'package:smart_univ/domain/repositories/announcement_repository.dart';
 import 'package:smart_univ/domain/usecases/get_announcements_use_case.dart';
 import 'package:smart_univ/features/announcements/presentation/bloc/announcements_bloc.dart';
 import 'package:smart_univ/features/announcements/presentation/pages/announcements_page.dart';
+import 'package:smart_univ/features/home/presentation/bloc/home_bloc.dart';
 import 'package:smart_univ/presentation/shell/scaffold_with_nav_bar.dart';
 
 class _MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
 
 class _MockConnectivityService extends Mock implements ConnectivityService {}
+
+class _MockHomeBloc extends MockBloc<HomeEvent, HomeState> implements HomeBloc {}
 
 // Two announcements that were cached on a previous online session.
 final _cachedAnnouncements = [
@@ -55,10 +59,17 @@ void main() {
   late _MockConnectivityService mockConnectivity;
   late AnnouncementsBloc announcementsBloc;
   late ConnectivityCubit connectivityCubit;
+  late HomeBloc homeBloc;
 
   setUp(() {
     mockRepo = _MockAnnouncementRepository();
     mockConnectivity = _MockConnectivityService();
+    homeBloc = _MockHomeBloc();
+    whenListen<HomeState>(
+      homeBloc,
+      const Stream.empty(),
+      initialState: const HomeInitial(),
+    );
 
     // Device is offline — stream immediately emits false.
     when(() => mockConnectivity.onConnectivityChanged)
@@ -76,6 +87,7 @@ void main() {
   tearDown(() {
     announcementsBloc.close();
     connectivityCubit.close();
+    homeBloc.close();
   });
 
   // Minimal router: only the announcements shell route is needed for this scenario.
@@ -99,15 +111,27 @@ void main() {
         providers: [
           BlocProvider.value(value: connectivityCubit),
           BlocProvider.value(value: announcementsBloc),
+          BlocProvider.value(value: homeBloc),
         ],
         child: MaterialApp.router(routerConfig: _buildRouter()),
       );
+
+  // Drives the widget tree to a stable state.
+  // Two pumps are required: the first drains async bloc events and stream
+  // emissions; the second advances the clock past the 300 ms AnimatedContainer
+  // transition in ScaffoldWithNavBar so no animation ticker is still running.
+  // pumpAndSettle cannot be used because CircularProgressIndicator (shown
+  // briefly while AnnouncementsBloc is loading) is an infinite animation.
+  Future<void> settle(WidgetTester tester) async {
+    await tester.pump(); // flush microtasks: bloc events + connectivity stream
+    await tester.pump(const Duration(milliseconds: 400)); // finish animations
+  }
 
   group('QA Scenario 1 — Cold Start Offline', () {
     testWidgets('cached announcements are displayed without a network call',
         (tester) async {
       await tester.pumpWidget(buildApp());
-      await tester.pumpAndSettle();
+      await settle(tester);
 
       expect(find.text('Week 3 Recap'), findsOneWidget);
       expect(find.text('Library Extended Hours'), findsOneWidget);
@@ -118,7 +142,7 @@ void main() {
 
     testWidgets('offline banner is visible', (tester) async {
       await tester.pumpWidget(buildApp());
-      await tester.pumpAndSettle();
+      await settle(tester);
 
       expect(
         find.text('You are offline — showing cached content'),
@@ -128,7 +152,7 @@ void main() {
 
     testWidgets('no error screen is shown', (tester) async {
       await tester.pumpWidget(buildApp());
-      await tester.pumpAndSettle();
+      await settle(tester);
 
       expect(find.byType(AppErrorWidget), findsNothing);
     });
@@ -137,7 +161,7 @@ void main() {
       await expectLater(
         () async {
           await tester.pumpWidget(buildApp());
-          await tester.pumpAndSettle();
+          await settle(tester);
         },
         returnsNormally,
       );
