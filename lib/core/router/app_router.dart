@@ -7,6 +7,7 @@ import 'package:smart_univ/features/auth/presentation/pages/login_page.dart';
 import 'package:smart_univ/features/events/presentation/pages/events_page.dart';
 import 'package:smart_univ/features/map/presentation/pages/map_screen.dart';
 import 'package:smart_univ/features/settings/presentation/pages/settings_page.dart';
+import 'package:smart_univ/features/timetable/presentation/pages/timetable_page.dart';
 import 'package:smart_univ/presentation/pages/home_page.dart';
 import 'package:smart_univ/presentation/shell/scaffold_with_nav_bar.dart';
 
@@ -51,6 +52,10 @@ class AppRouter {
           GoRoute(
             path: '/map',
             builder: (context, state) => const MapScreen(),
+          ),
+          GoRoute(
+            path: '/timetable',
+            builder: (context, state) => const TimetablePage(),
           ),
           GoRoute(
             path: '/settings',

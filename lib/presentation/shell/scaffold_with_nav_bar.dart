@@ -7,7 +7,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
   final Widget child;
   const ScaffoldWithNavBar({super.key, required this.child});
 
-  static const _tabs = ['/home', '/announcements', '/events', '/map', '/settings'];
+  static const _tabs = ['/home', '/announcements', '/events', '/map', '/timetable', '/settings'];
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
@@ -64,6 +64,11 @@ class ScaffoldWithNavBar extends StatelessWidget {
             icon: Icon(Icons.map_outlined),
             selectedIcon: Icon(Icons.map),
             label: 'Map',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_today_outlined),
+            selectedIcon: Icon(Icons.calendar_today),
+            label: 'Timetable',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),
