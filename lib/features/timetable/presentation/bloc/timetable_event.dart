@@ -10,3 +10,11 @@ sealed class TimetableEvent extends Equatable {
 final class TimetableRequested extends TimetableEvent {
   const TimetableRequested();
 }
+
+final class TimetableItemDeleted extends TimetableEvent {
+  final TimetableItem item;
+  const TimetableItemDeleted(this.item);
+
+  @override
+  List<Object?> get props => [item];
+}

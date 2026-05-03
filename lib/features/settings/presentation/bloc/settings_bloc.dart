@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:smart_univ/core/services/notification_service.dart';
 import 'package:smart_univ/core/services/settings_service.dart';
 import 'package:smart_univ/domain/usecases/export_timetable_use_case.dart';
 
@@ -10,8 +11,9 @@ part 'settings_state.dart';
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final SettingsService _settings;
   final ExportTimetableUseCase _exportTimetable;
+  final NotificationService _notif;
 
-  SettingsBloc(this._settings, this._exportTimetable)
+  SettingsBloc(this._settings, this._exportTimetable, this._notif)
       : super(
           SettingsState(
             themeMode: _themeModeFromString(_settings.getThemeMode()),
@@ -45,6 +47,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     SettingsNotificationsChanged event,
     Emitter<SettingsState> emit,
   ) async {
+    if (!event.enabled) await _notif.cancelAll();
     await _settings.setNotificationsEnabled(event.enabled);
     emit(state.copyWith(notificationsEnabled: event.enabled));
   }

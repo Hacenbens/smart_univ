@@ -57,6 +57,14 @@
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>SmartCampus uses Bluetooth to detect campus beacons for indoor navigation and automatic check-in at lectures and events.</string>
 
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.yourname.smartcampus.announcementsync</string>
+	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

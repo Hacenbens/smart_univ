@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:smart_univ/core/services/notification_service.dart';
 import 'package:smart_univ/domain/repositories/auth_repository.dart';
 
 part 'auth_event.dart';
@@ -8,8 +9,9 @@ part 'auth_state.dart';
 class AuthBloc extends Bloc<AuthEvent, AuthBlocState> {
   // ignore: unused_field — will be used in Week 2
   final AuthRepository _repository;
+  final NotificationService _notif;
 
-  AuthBloc(this._repository) : super(AuthInitial()) {
+  AuthBloc(this._repository, this._notif) : super(AuthInitial()) {
     on<AuthSignInRequested>(_onSignInRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
   }
@@ -25,6 +27,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthBlocState> {
     AuthSignOutRequested event,
     Emitter<AuthBlocState> emit,
   ) async {
-    // TODO(week-2): call _repository.signOut and emit AuthUnauthenticated
+    await _notif.cancelAll();
+    emit(AuthUnauthenticated());
   }
 }
