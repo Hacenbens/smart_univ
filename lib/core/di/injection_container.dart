@@ -146,7 +146,7 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
 
   // ── BLoCs ───────────────────────────────────────────────────────────────────
   sl.registerFactory(() => HomeBloc(sl<ShakeDetectorService>(), sl<ScheduleRemindersUseCase>()));
-  sl.registerFactory(() => TimetableBloc(sl<GetTimetableUseCase>(), sl<ScheduleRemindersUseCase>()));
+  sl.registerFactory(() => TimetableBloc(sl<GetTimetableUseCase>(), sl<ScheduleRemindersUseCase>(), sl<NotificationService>()));
   sl.registerFactory(() => AnnouncementsBloc(sl<GetAnnouncementsUseCase>()));
   sl.registerFactory(
     () => EventsBloc(
