@@ -1,5 +1,14 @@
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:go_router/go_router.dart';
 import 'package:timezone/timezone.dart' as tz;
+
+@pragma('vm:entry-point')
+void onDidReceiveBackgroundNotificationResponse(NotificationResponse details) {
+  debugPrint('[Notifications] background action received: ${details.payload}');
+}
 
 class NotificationService {
   static const _classRemindersChannelId = 'class_reminders';
@@ -7,7 +16,7 @@ class NotificationService {
 
   final _plugin = FlutterLocalNotificationsPlugin();
 
-  Future<void> init() async {
+  Future<void> init({GlobalKey<NavigatorState>? navigatorKey}) async {
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     const darwinSettings = DarwinInitializationSettings(
@@ -21,9 +30,29 @@ class NotificationService {
         iOS: darwinSettings,
         macOS: darwinSettings,
       ),
+      onDidReceiveNotificationResponse: navigatorKey == null
+          ? null
+          : (details) => _handleTap(details.payload, navigatorKey),
+      onDidReceiveBackgroundNotificationResponse:
+          onDidReceiveBackgroundNotificationResponse,
     );
     await _createAndroidChannels();
   }
+
+  void _handleTap(String? payload, GlobalKey<NavigatorState> key) {
+    if (payload == null) return;
+    try {
+      final map = jsonDecode(payload) as Map<String, dynamic>;
+      final type = map['type'] as String?;
+      final id = map['id'] as String?;
+      if (type == 'timetable' && id != null) {
+        key.currentContext?.go('/timetable/$id');
+      }
+    } catch (_) {}
+  }
+
+  Future<NotificationAppLaunchDetails?> getAppLaunchDetails() =>
+      _plugin.getNotificationAppLaunchDetails();
 
   Future<void> _createAndroidChannels() async {
     final impl = _plugin.resolvePlatformSpecificImplementation<
@@ -41,9 +70,6 @@ class NotificationService {
     ));
   }
 
-  /// Requests notification permission at the OS level.
-  /// Returns `true` if the user granted permission.
-  /// Call only from a contextually appropriate moment (e.g. Timetable screen).
   Future<bool> requestPermission() async {
     final android = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();

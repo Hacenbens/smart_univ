@@ -20,6 +20,9 @@ class TimetableDao extends DatabaseAccessor<AppDatabase>
             mode: InsertMode.insertOrReplace,
           ));
 
+  Future<TimetableRow?> getById(int id) =>
+      (select(timetableTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+
   Future<int> deleteOlderThan(DateTime cutoff) =>
       (delete(timetableTable)
             ..where((t) => t.cachedAt.isSmallerThanValue(cutoff)))

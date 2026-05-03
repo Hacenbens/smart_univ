@@ -94,6 +94,9 @@ dependencies:
   # Persistent key-value storage
   shared_preferences: ^2.3.0
 
+  # Background task scheduling
+  workmanager: ^0.5.0
+
   # Identity provider
   auth0_flutter: ^2.0.1
 
