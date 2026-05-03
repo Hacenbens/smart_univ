@@ -100,6 +100,9 @@ dependencies:
   # Secure token storage
   flutter_secure_storage: ^9.2.2
 
+  # Biometric authentication
+  local_auth: ^2.3.0
+
   # Identity provider
   auth0_flutter: ^2.0.1
 
@@ -117,6 +120,7 @@ dev_dependencies:
   json_serializable: ^6.8.0
   drift_dev: ^2.26.0
   mocktail: ^1.0.0
+  bloc_test: ^10.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
