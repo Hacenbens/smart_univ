@@ -56,6 +56,8 @@
 	<string>SmartCampus accesses motion sensors to count your daily steps and support indoor positioning across campus buildings.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>SmartCampus uses Bluetooth to detect campus beacons for indoor navigation and automatic check-in at lectures and events.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>SmartCampus uses Face ID to let you sign in quickly without typing your password.</string>
 
 	<key>UIBackgroundModes</key>
 	<array>

@@ -6,6 +6,7 @@ import 'package:smart_univ/core/cubit/connectivity_cubit.dart';
 import 'package:smart_univ/core/services/connectivity_service.dart';
 import 'package:smart_univ/core/services/camera_service.dart';
 import 'package:smart_univ/core/services/location_service.dart';
+import 'package:smart_univ/core/services/biometric_service.dart';
 import 'package:smart_univ/core/services/notification_service.dart';
 import 'package:smart_univ/core/services/shake_detector_service.dart';
 import 'package:smart_univ/core/services/permission_service.dart';
@@ -66,6 +67,7 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
   sl.registerLazySingleton(() => ShakeDetectorService());
   sl.registerLazySingleton(() => NotificationService());
   sl.registerLazySingleton(() => SecureStorageService());
+  sl.registerLazySingleton(() => BiometricService());
 
   // ── Local Database ───────────────────────────────────────────────────────────
   sl.registerLazySingleton(() => AppDatabase());
@@ -157,8 +159,8 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
       sl<EventRepository>(),
     ),
   );
-  sl.registerFactory(() => AuthBloc(sl<AuthRepository>(), sl<NotificationService>()));
+  sl.registerFactory(() => AuthBloc(sl<AuthRepository>(), sl<NotificationService>(), sl<BiometricService>()));
   sl.registerFactory(
-    () => SettingsBloc(sl<SettingsService>(), sl<ExportTimetableUseCase>(), sl<NotificationService>()),
+    () => SettingsBloc(sl<SettingsService>(), sl<ExportTimetableUseCase>(), sl<NotificationService>(), sl<BiometricService>()),
   );
 }
