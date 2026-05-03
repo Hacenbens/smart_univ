@@ -2,14 +2,151 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:smart_univ/core/di/injection_container.dart';
+import 'package:smart_univ/core/services/permission_lifecycle_mixin.dart';
+import 'package:smart_univ/core/services/permission_service.dart';
+import 'package:smart_univ/core/widgets/rationale_dialog.dart';
 import 'package:smart_univ/domain/entities/event.dart';
 import 'package:smart_univ/domain/usecases/attach_photo_use_case.dart';
 import 'package:smart_univ/features/events/presentation/bloc/events_bloc.dart';
 
-class EventDetailPage extends StatelessWidget {
+class EventDetailPage extends StatefulWidget {
   final String eventId;
-
   const EventDetailPage({super.key, required this.eventId});
+
+  @override
+  State<EventDetailPage> createState() => _EventDetailPageState();
+}
+
+class _EventDetailPageState extends State<EventDetailPage>
+    with WidgetsBindingObserver, PermissionLifecycleMixin<EventDetailPage> {
+  PermissionResult? _cameraPermission;
+
+  // ── PermissionLifecycleMixin contract ──────────────────────────────────────
+
+  @override
+  Permission get observedPermission => Permission.camera;
+
+  @override
+  PermissionService get permissionService => sl<PermissionService>();
+
+  @override
+  void onPermissionStatusChanged(PermissionResult result) {
+    setState(() => _cameraPermission = result);
+  }
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
+
+  @override
+  void initState() {
+    super.initState(); // mixin registers WidgetsBindingObserver
+    _checkCameraPermission();
+  }
+
+  Future<void> _checkCameraPermission() async {
+    final result = await sl<PermissionService>().checkPermission(Permission.camera);
+    if (mounted) setState(() => _cameraPermission = result);
+  }
+
+  // ── Camera gate ────────────────────────────────────────────────────────────
+
+  Future<void> _onAttachPhotoTapped() async {
+    final permission =
+        _cameraPermission ??
+        await sl<PermissionService>().checkPermission(Permission.camera);
+    if (!mounted) return;
+
+    switch (permission) {
+      case PermissionResult.granted:
+        _showSourcePicker();
+      case PermissionResult.denied:
+        _showCameraRationale();
+      case PermissionResult.permanentlyDenied:
+      case PermissionResult.restricted:
+        _showCameraPermanentlyDenied();
+    }
+  }
+
+  void _showCameraRationale() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => RationaleDialog(
+        title: 'Camera Access',
+        body: 'SmartCampus needs camera access to attach photos to event notes.',
+        allowLabel: 'Continue',
+        onAllow: () async {
+          Navigator.of(ctx).pop();
+          final result =
+              await sl<PermissionService>().requestPermission(Permission.camera);
+          if (!mounted) return;
+          setState(() => _cameraPermission = result);
+          if (result == PermissionResult.granted) {
+            _showSourcePicker();
+          } else {
+            // Second denial — fall back gracefully without re-prompting.
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Camera access denied')),
+            );
+          }
+        },
+        onDeny: () => Navigator.of(ctx).pop(),
+      ),
+    );
+  }
+
+  void _showCameraPermanentlyDenied() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => RationaleDialog(
+        title: 'Camera Access Blocked',
+        body: 'Camera access was permanently denied. Enable it in Settings to attach photos to event notes.',
+        allowLabel: 'Open Settings',
+        denyLabel: 'Cancel',
+        onAllow: () {
+          Navigator.of(ctx).pop();
+          sl<PermissionService>().openSettings();
+        },
+        onDeny: () => Navigator.of(ctx).pop(),
+      ),
+    );
+  }
+
+  void _showSourcePicker() {
+    final bloc = context.read<EventsBloc>();
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetCtx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.camera_alt_outlined),
+            title: const Text('Take Photo'),
+            onTap: () {
+              Navigator.of(sheetCtx).pop();
+              bloc.add(AttachPhotoRequested(
+                eventId: widget.eventId,
+                source: PhotoSource.camera,
+              ));
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library_outlined),
+            title: const Text('Choose from Gallery'),
+            onTap: () {
+              Navigator.of(sheetCtx).pop();
+              bloc.add(AttachPhotoRequested(
+                eventId: widget.eventId,
+                source: PhotoSource.gallery,
+              ));
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +167,7 @@ class EventDetailPage extends StatelessWidget {
       },
       builder: (context, state) {
         final event = state is EventsLoaded
-            ? state.events.where((e) => e.id == eventId).firstOrNull
+            ? state.events.where((e) => e.id == widget.eventId).firstOrNull
             : null;
 
         return Scaffold(
@@ -41,7 +178,7 @@ class EventDetailPage extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.photo_camera_outlined),
                   tooltip: 'Attach Photo',
-                  onPressed: () => _showSourcePicker(context, eventId),
+                  onPressed: _onAttachPhotoTapped,
                 ),
             ],
           ),
@@ -50,40 +187,6 @@ class EventDetailPage extends StatelessWidget {
               : const Center(child: CircularProgressIndicator()),
         );
       },
-    );
-  }
-
-  void _showSourcePicker(BuildContext context, String eventId) {
-    final bloc = context.read<EventsBloc>();
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (sheetCtx) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.camera_alt_outlined),
-            title: const Text('Take Photo'),
-            onTap: () {
-              Navigator.of(sheetCtx).pop();
-              bloc.add(AttachPhotoRequested(
-                eventId: eventId,
-                source: PhotoSource.camera,
-              ));
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.photo_library_outlined),
-            title: const Text('Choose from Gallery'),
-            onTap: () {
-              Navigator.of(sheetCtx).pop();
-              bloc.add(AttachPhotoRequested(
-                eventId: eventId,
-                source: PhotoSource.gallery,
-              ));
-            },
-          ),
-        ],
-      ),
     );
   }
 }
