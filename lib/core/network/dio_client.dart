@@ -25,6 +25,7 @@ class DioClient {
     dio.interceptors.addAll([
       ErrorInterceptor(),
       AuthInterceptor(
+        dio: dio,
         tokenProvider: tokenProvider,
         onAuthExpired: onAuthExpired,
       ),
