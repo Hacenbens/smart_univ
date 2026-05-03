@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:smart_univ/core/di/injection_container.dart';
 import 'package:smart_univ/core/error/app_exception.dart';
 import 'package:smart_univ/core/services/location_service.dart';
+import 'package:smart_univ/core/services/permission_lifecycle_mixin.dart';
 import 'package:smart_univ/core/services/permission_service.dart';
+import 'package:smart_univ/core/widgets/rationale_dialog.dart';
 
 class _CampusPOI {
   final String name;
@@ -18,8 +21,8 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
-  // Centred on USTHB campus, Algiers
+class _MapScreenState extends State<MapScreen>
+    with WidgetsBindingObserver, PermissionLifecycleMixin<MapScreen> {
   static const _campusCenter = LatLng(36.7122, 3.1581);
 
   static const _pois = [
@@ -34,12 +37,39 @@ class _MapScreenState extends State<MapScreen> {
   final Set<Marker> _markers = {};
   bool _locationDenied = false;
 
+  // ── PermissionLifecycleMixin contract ──────────────────────────────────────
+
+  @override
+  Permission get observedPermission => Permission.locationWhenInUse;
+
+  @override
+  PermissionService get permissionService => sl<PermissionService>();
+
+  @override
+  void onPermissionStatusChanged(PermissionResult result) {
+    if (result == PermissionResult.granted) {
+      _fetchUserLocation();
+    } else {
+      setState(() => _locationDenied = true);
+    }
+  }
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
+
   @override
   void initState() {
-    super.initState();
+    super.initState(); // mixin registers WidgetsBindingObserver
     _buildPoiMarkers();
     _fetchUserLocation();
   }
+
+  @override
+  void dispose() {
+    _mapController?.dispose();
+    super.dispose(); // mixin removes WidgetsBindingObserver
+  }
+
+  // ── Location logic ─────────────────────────────────────────────────────────
 
   void _buildPoiMarkers() {
     for (final poi in _pois) {
@@ -79,56 +109,56 @@ class _MapScreenState extends State<MapScreen> {
     } on PermissionException {
       if (!mounted) return;
       setState(() => _locationDenied = true);
-      await _showLocationRationale();
+      _showLocationRationale();
     } catch (_) {
       if (!mounted) return;
       setState(() => _locationDenied = true);
     }
   }
 
-  Future<void> _showLocationRationale() async {
-    final confirmed = await showDialog<bool>(
+  void _showLocationRationale() {
+    showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Location Permission'),
-        content: const Text(
-          'SmartCampus needs your location to show where you are on the campus map.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Not Now'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Continue'),
-          ),
-        ],
+      builder: (ctx) => RationaleDialog(
+        title: 'Location Permission',
+        body: 'SmartCampus needs your location to show where you are on the campus map.',
+        allowLabel: 'Continue',
+        onAllow: () {
+          Navigator.of(ctx).pop();
+          _fetchUserLocation();
+        },
+        onDeny: () => Navigator.of(ctx).pop(),
       ),
     );
-    if (confirmed == true && mounted) await _fetchUserLocation();
   }
 
   Future<void> _onEnableLocationTapped() async {
     final result = await sl<PermissionService>().checkPermission(
       Permission.locationWhenInUse,
     );
-    if (result == PermissionResult.permanentlyDenied) {
-      if (!mounted) return;
-      await sl<PermissionService>().showPermanentlyDeniedDialog(
-        context,
-        'Location',
+    if (!mounted) return;
+    if (result == PermissionResult.permanentlyDenied ||
+        result == PermissionResult.restricted) {
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => RationaleDialog(
+          title: 'Location Access Blocked',
+          body: 'Location access was permanently denied. Enable it in Settings to see your position on the campus map.',
+          allowLabel: 'Open Settings',
+          denyLabel: 'Cancel',
+          onAllow: () {
+            Navigator.of(ctx).pop();
+            sl<PermissionService>().openSettings();
+          },
+          onDeny: () => Navigator.of(ctx).pop(),
+        ),
       );
     } else {
       await _fetchUserLocation();
     }
   }
 
-  @override
-  void dispose() {
-    _mapController?.dispose();
-    super.dispose();
-  }
+  // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
