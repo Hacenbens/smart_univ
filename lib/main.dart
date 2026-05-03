@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:workmanager/workmanager.dart';
 import 'package:smart_univ/core/cubit/connectivity_cubit.dart';
 import 'package:smart_univ/core/di/injection_container.dart';
 import 'package:smart_univ/core/usecases/app_initialization_use_case.dart';
@@ -16,6 +17,7 @@ import 'package:smart_univ/core/services/notification_service.dart';
 import 'package:smart_univ/core/theme/app_theme.dart';
 import 'package:smart_univ/data/local/app_database.dart';
 import 'package:smart_univ/data/local/daos/timetable_dao.dart';
+import 'package:smart_univ/domain/usecases/announcement_sync_use_case.dart';
 import 'package:smart_univ/features/announcements/presentation/bloc/announcements_bloc.dart';
 import 'package:smart_univ/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:smart_univ/features/events/presentation/bloc/events_bloc.dart';
@@ -23,12 +25,36 @@ import 'package:smart_univ/features/home/presentation/bloc/home_bloc.dart';
 import 'package:smart_univ/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:smart_univ/features/timetable/presentation/bloc/timetable_bloc.dart';
 
+// Must be a top-level function so WorkManager's background isolate can resolve
+// the symbol. The @pragma prevents AOT tree-shaking in release builds.
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((taskName, inputData) async {
+    switch (taskName) {
+      case 'announcementSync':
+        WidgetsFlutterBinding.ensureInitialized();
+        await initDependencies();
+        final useCase = sl<AnnouncementSyncUseCase>();
+        await useCase.call();
+        await sl<AppDatabase>().close();
+    }
+    return true;
+  });
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
   tz.initializeTimeZones();
   tz.setLocalLocation(tz.getLocation(await FlutterTimezone.getLocalTimezone()));
   await initDependencies();
+  await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+  await Workmanager().registerPeriodicTask(
+    'announcement-sync',
+    'announcementSync',
+    frequency: const Duration(minutes: 15),
+    constraints: Constraints(networkType: NetworkType.connected),
+  );
   await sl<NotificationService>().init(navigatorKey: AppRouter.navigatorKey);
   await sl<AppInitializationUseCase>().call();
   await _seedTimetableData();

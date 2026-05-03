@@ -39,6 +39,7 @@ import 'package:smart_univ/domain/usecases/get_announcements_use_case.dart';
 import 'package:smart_univ/domain/usecases/attach_photo_use_case.dart';
 import 'package:smart_univ/domain/usecases/get_events_use_case.dart';
 import 'package:smart_univ/domain/usecases/get_timetable_use_case.dart';
+import 'package:smart_univ/domain/usecases/announcement_sync_use_case.dart';
 import 'package:smart_univ/domain/usecases/schedule_reminders_use_case.dart';
 import 'package:smart_univ/features/announcements/presentation/bloc/announcements_bloc.dart';
 import 'package:smart_univ/features/auth/presentation/bloc/auth_bloc.dart';
@@ -138,6 +139,9 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
   sl.registerLazySingleton(() => GetTimetableUseCase(sl<TimetableRepository>()));
   sl.registerLazySingleton(
     () => ScheduleRemindersUseCase(sl<TimetableRepository>(), sl<NotificationService>()),
+  );
+  sl.registerLazySingleton(
+    () => AnnouncementSyncUseCase(sl<AnnouncementRepository>()),
   );
 
   // ── BLoCs ───────────────────────────────────────────────────────────────────
