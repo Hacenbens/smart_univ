@@ -4,6 +4,7 @@ class SettingsService {
   static const String _keyTheme = 'theme_mode';
   static const String _keyLanguage = 'language';
   static const String _keyNotifications = 'notifications_enabled';
+  static const String _keyBiometric = 'biometric_enabled';
 
   final SharedPreferences _prefs;
 
@@ -24,6 +25,11 @@ class SettingsService {
 
   bool getNotificationsEnabled() =>
       _prefs.getBool(_keyNotifications) ?? true;
+
+  Future<void> setBiometricEnabled(bool value) =>
+      _prefs.setBool(_keyBiometric, value);
+
+  bool getBiometricEnabled() => _prefs.getBool(_keyBiometric) ?? false;
 
   /// `true` once [setNotificationsEnabled] has been called at least once,
   /// meaning the permission prompt has already been shown to the user.

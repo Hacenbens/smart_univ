@@ -9,6 +9,7 @@ final class SettingsState extends Equatable {
   final ThemeMode themeMode;
   final String language;
   final bool notificationsEnabled;
+  final bool biometricEnabled;
   final ExportStatus exportStatus;
   final String? exportError;
 
@@ -16,6 +17,7 @@ final class SettingsState extends Equatable {
     this.themeMode = ThemeMode.system,
     this.language = 'en',
     this.notificationsEnabled = true,
+    this.biometricEnabled = false,
     this.exportStatus = ExportStatus.idle,
     this.exportError,
   });
@@ -24,6 +26,7 @@ final class SettingsState extends Equatable {
     ThemeMode? themeMode,
     String? language,
     bool? notificationsEnabled,
+    bool? biometricEnabled,
     ExportStatus? exportStatus,
     Object? exportError = _keep,
   }) =>
@@ -31,6 +34,7 @@ final class SettingsState extends Equatable {
         themeMode: themeMode ?? this.themeMode,
         language: language ?? this.language,
         notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+        biometricEnabled: biometricEnabled ?? this.biometricEnabled,
         exportStatus: exportStatus ?? this.exportStatus,
         exportError:
             identical(exportError, _keep) ? this.exportError : exportError as String?,
@@ -38,5 +42,5 @@ final class SettingsState extends Equatable {
 
   @override
   List<Object?> get props =>
-      [themeMode, language, notificationsEnabled, exportStatus, exportError];
+      [themeMode, language, notificationsEnabled, biometricEnabled, exportStatus, exportError];
 }

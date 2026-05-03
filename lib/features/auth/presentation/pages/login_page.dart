@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:smart_univ/core/di/injection_container.dart';
+import 'package:smart_univ/core/services/biometric_service.dart';
 import 'package:smart_univ/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:smart_univ/features/settings/presentation/bloc/settings_bloc.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,6 +17,28 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _biometricAvailable = false;
+  bool _biometricChecked = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_biometricChecked) {
+      _biometricChecked = true;
+      _initBiometric();
+    }
+  }
+
+  Future<void> _initBiometric() async {
+    final biometricEnabled =
+        context.read<SettingsBloc>().state.biometricEnabled;
+    final available = await sl<BiometricService>().isAvailable();
+    if (!mounted) return;
+    setState(() => _biometricAvailable = available);
+    if (biometricEnabled && available) {
+      context.read<AuthBloc>().add(const AuthBiometricRequested());
+    }
+  }
 
   @override
   void dispose() {
@@ -92,18 +117,39 @@ class _LoginPageState extends State<LoginPage> {
                     BlocBuilder<AuthBloc, AuthBlocState>(
                       builder: (context, state) {
                         final loading = state is AuthLoading;
-                        return FilledButton(
-                          onPressed: loading ? null : _submit,
-                          child: loading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text('Sign in'),
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            FilledButton(
+                              onPressed: loading ? null : _submit,
+                              child: loading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Text('Sign in'),
+                            ),
+                            if (_biometricAvailable &&
+                                context
+                                    .watch<SettingsBloc>()
+                                    .state
+                                    .biometricEnabled) ...[
+                              const SizedBox(height: 12),
+                              OutlinedButton.icon(
+                                onPressed: loading
+                                    ? null
+                                    : () => context
+                                        .read<AuthBloc>()
+                                        .add(const AuthBiometricRequested()),
+                                icon: const Icon(Icons.fingerprint),
+                                label: const Text('Sign in with biometrics'),
+                              ),
+                            ],
+                          ],
                         );
                       },
                     ),
