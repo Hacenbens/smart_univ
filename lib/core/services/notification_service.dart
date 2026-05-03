@@ -98,7 +98,13 @@ class NotificationService {
         body,
         time,
         NotificationDetails(
-          android: AndroidNotificationDetails(channelId, channelId),
+          android: AndroidNotificationDetails(
+            channelId,
+            channelId,
+            importance: Importance.high,
+            priority: Priority.high,
+            category: AndroidNotificationCategory.reminder,
+          ),
           iOS: const DarwinNotificationDetails(),
         ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
