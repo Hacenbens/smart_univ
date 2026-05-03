@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:smart_univ/core/either.dart';
 import 'package:smart_univ/core/error/app_exception.dart';
+import 'package:smart_univ/core/services/shake_detector_service.dart';
 import 'package:smart_univ/domain/entities/announcement.dart';
 import 'package:smart_univ/domain/repositories/announcement_repository.dart';
 import 'package:smart_univ/domain/usecases/get_announcements_use_case.dart';
@@ -10,6 +13,8 @@ import 'package:smart_univ/features/announcements/presentation/bloc/announcement
 
 class MockAnnouncementRepository extends Mock
     implements AnnouncementRepository {}
+
+class MockShakeDetectorService extends Mock implements ShakeDetectorService {}
 
 final _announcements = [
   Announcement(
@@ -27,15 +32,23 @@ void main() {
 
   late MockAnnouncementRepository mockRepository;
   late GetAnnouncementsUseCase useCase;
+  late MockShakeDetectorService mockShake;
+  late StreamController<void> shakeController;
   late AnnouncementsBloc bloc;
 
   setUp(() {
     mockRepository = MockAnnouncementRepository();
     useCase = GetAnnouncementsUseCase(mockRepository);
-    bloc = AnnouncementsBloc(useCase);
+    mockShake = MockShakeDetectorService();
+    shakeController = StreamController<void>.broadcast();
+    when(() => mockShake.onShake).thenAnswer((_) => shakeController.stream);
+    bloc = AnnouncementsBloc(useCase, mockShake);
   });
 
-  tearDown(() => bloc.close());
+  tearDown(() async {
+    await bloc.close();
+    await shakeController.close();
+  });
 
   test('initial state is AnnouncementsInitial', () {
     expect(bloc.state, isA<AnnouncementsInitial>());
