@@ -16,6 +16,7 @@ import 'package:smart_univ/features/events/presentation/bloc/events_bloc.dart';
 import 'package:smart_univ/core/services/notification_service.dart';
 import 'package:smart_univ/features/home/presentation/bloc/home_bloc.dart';
 import 'package:smart_univ/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:smart_univ/features/timetable/presentation/bloc/timetable_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,6 +56,7 @@ class _SmartCampusAppState extends State<SmartCampusApp> {
         BlocProvider(create: (_) => sl<EventsBloc>()),
         BlocProvider(create: (_) => sl<AuthBloc>()),
         BlocProvider(create: (_) => sl<SettingsBloc>()),
+        BlocProvider(create: (_) => sl<TimetableBloc>()),
       ],
       child: BlocBuilder<SettingsBloc, SettingsState>(
         builder: (context, settings) {

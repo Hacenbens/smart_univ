@@ -38,11 +38,14 @@ import 'package:smart_univ/domain/usecases/export_timetable_use_case.dart';
 import 'package:smart_univ/domain/usecases/get_announcements_use_case.dart';
 import 'package:smart_univ/domain/usecases/attach_photo_use_case.dart';
 import 'package:smart_univ/domain/usecases/get_events_use_case.dart';
+import 'package:smart_univ/domain/usecases/get_timetable_use_case.dart';
+import 'package:smart_univ/domain/usecases/schedule_reminders_use_case.dart';
 import 'package:smart_univ/features/announcements/presentation/bloc/announcements_bloc.dart';
 import 'package:smart_univ/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:smart_univ/features/events/presentation/bloc/events_bloc.dart';
 import 'package:smart_univ/features/home/presentation/bloc/home_bloc.dart';
 import 'package:smart_univ/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:smart_univ/features/timetable/presentation/bloc/timetable_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -132,9 +135,14 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
     () => AttachPhotoUseCase(sl<CameraService>(), sl<PermissionService>()),
   );
   sl.registerLazySingleton(() => ExportTimetableUseCase(sl<TimetableRepository>()));
+  sl.registerLazySingleton(() => GetTimetableUseCase(sl<TimetableRepository>()));
+  sl.registerLazySingleton(
+    () => ScheduleRemindersUseCase(sl<TimetableRepository>(), sl<NotificationService>()),
+  );
 
   // ── BLoCs ───────────────────────────────────────────────────────────────────
-  sl.registerFactory(() => HomeBloc(sl<ShakeDetectorService>()));
+  sl.registerFactory(() => HomeBloc(sl<ShakeDetectorService>(), sl<ScheduleRemindersUseCase>()));
+  sl.registerFactory(() => TimetableBloc(sl<GetTimetableUseCase>(), sl<ScheduleRemindersUseCase>()));
   sl.registerFactory(() => AnnouncementsBloc(sl<GetAnnouncementsUseCase>()));
   sl.registerFactory(
     () => EventsBloc(
