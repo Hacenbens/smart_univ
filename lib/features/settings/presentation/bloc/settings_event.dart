@@ -34,6 +34,15 @@ final class SettingsNotificationsChanged extends SettingsEvent {
   List<Object?> get props => [enabled];
 }
 
+final class SettingsBiometricChanged extends SettingsEvent {
+  final bool enabled;
+
+  const SettingsBiometricChanged(this.enabled);
+
+  @override
+  List<Object?> get props => [enabled];
+}
+
 final class ExportTimetableRequested extends SettingsEvent {
   const ExportTimetableRequested();
 }

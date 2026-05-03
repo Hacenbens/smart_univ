@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:smart_univ/core/services/biometric_service.dart';
 import 'package:smart_univ/core/services/notification_service.dart';
 import 'package:smart_univ/domain/repositories/auth_repository.dart';
 
@@ -9,9 +10,12 @@ part 'auth_state.dart';
 class AuthBloc extends Bloc<AuthEvent, AuthBlocState> {
   final AuthRepository _repository;
   final NotificationService _notif;
+  final BiometricService _biometric;
 
-  AuthBloc(this._repository, this._notif) : super(AuthInitial()) {
+  AuthBloc(this._repository, this._notif, this._biometric)
+      : super(AuthInitial()) {
     on<AuthCheckRequested>(_onCheckRequested);
+    on<AuthBiometricRequested>(_onBiometricRequested);
     on<AuthSignInRequested>(_onSignInRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
   }
@@ -22,6 +26,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthBlocState> {
   ) async {
     final loggedIn = await _repository.isLoggedIn();
     emit(loggedIn ? const AuthAuthenticated() : const AuthUnauthenticated());
+  }
+
+  Future<void> _onBiometricRequested(
+    AuthBiometricRequested event,
+    Emitter<AuthBlocState> emit,
+  ) async {
+    final passed = await _biometric.authenticate();
+    if (!passed) return; // user cancelled — stay on login page
+
+    final hasSession = await _repository.isLoggedIn();
+    if (hasSession) {
+      emit(const AuthAuthenticated());
+    } else {
+      emit(const AuthFailure(
+        'No stored session — please sign in with your password first.',
+      ));
+    }
   }
 
   Future<void> _onSignInRequested(

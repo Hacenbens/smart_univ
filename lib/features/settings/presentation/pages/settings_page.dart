@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:nfc_manager/nfc_manager.dart';
+import 'package:smart_univ/core/di/injection_container.dart';
+import 'package:smart_univ/core/services/biometric_service.dart';
 import 'package:smart_univ/features/settings/presentation/bloc/settings_bloc.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -49,6 +51,9 @@ class SettingsPage extends StatelessWidget {
                   .read<SettingsBloc>()
                   .add(SettingsNotificationsChanged(enabled)),
             ),
+            const Divider(height: 1),
+            _SectionHeader('Security'),
+            const _BiometricTile(),
             const Divider(height: 1),
             _SectionHeader('Data'),
             _ExportTile(
@@ -184,6 +189,45 @@ class _ExportTile extends StatelessWidget {
           : () => context
               .read<SettingsBloc>()
               .add(const ExportTimetableRequested()),
+    );
+  }
+}
+
+class _BiometricTile extends StatefulWidget {
+  const _BiometricTile();
+
+  @override
+  State<_BiometricTile> createState() => _BiometricTileState();
+}
+
+class _BiometricTileState extends State<_BiometricTile> {
+  bool? _available;
+
+  @override
+  void initState() {
+    super.initState();
+    sl<BiometricService>().isAvailable().then((v) {
+      if (mounted) setState(() => _available = v);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_available == false) return const SizedBox.shrink();
+    return BlocBuilder<SettingsBloc, SettingsState>(
+      builder: (context, state) {
+        return SwitchListTile(
+          secondary: const Icon(Icons.fingerprint),
+          title: const Text('Biometric sign-in'),
+          subtitle: const Text('Use fingerprint or face to unlock'),
+          value: state.biometricEnabled,
+          onChanged: _available == null
+              ? null
+              : (enabled) => context
+                  .read<SettingsBloc>()
+                  .add(SettingsBiometricChanged(enabled)),
+        );
+      },
     );
   }
 }

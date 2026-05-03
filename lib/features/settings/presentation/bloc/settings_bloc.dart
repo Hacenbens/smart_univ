@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:smart_univ/core/services/biometric_service.dart';
 import 'package:smart_univ/core/services/notification_service.dart';
 import 'package:smart_univ/core/services/settings_service.dart';
 import 'package:smart_univ/domain/usecases/export_timetable_use_case.dart';
@@ -12,18 +13,21 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final SettingsService _settings;
   final ExportTimetableUseCase _exportTimetable;
   final NotificationService _notif;
+  final BiometricService _biometric;
 
-  SettingsBloc(this._settings, this._exportTimetable, this._notif)
+  SettingsBloc(this._settings, this._exportTimetable, this._notif, this._biometric)
       : super(
           SettingsState(
             themeMode: _themeModeFromString(_settings.getThemeMode()),
             language: _settings.getLanguage(),
             notificationsEnabled: _settings.getNotificationsEnabled(),
+            biometricEnabled: _settings.getBiometricEnabled(),
           ),
         ) {
     on<SettingsThemeChanged>(_onThemeChanged);
     on<SettingsLanguageChanged>(_onLanguageChanged);
     on<SettingsNotificationsChanged>(_onNotificationsChanged);
+    on<SettingsBiometricChanged>(_onBiometricChanged);
     on<ExportTimetableRequested>(_onExportTimetable);
   }
 
@@ -50,6 +54,15 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     if (!event.enabled) await _notif.cancelAll();
     await _settings.setNotificationsEnabled(event.enabled);
     emit(state.copyWith(notificationsEnabled: event.enabled));
+  }
+
+  Future<void> _onBiometricChanged(
+    SettingsBiometricChanged event,
+    Emitter<SettingsState> emit,
+  ) async {
+    if (event.enabled && !await _biometric.isAvailable()) return;
+    await _settings.setBiometricEnabled(event.enabled);
+    emit(state.copyWith(biometricEnabled: event.enabled));
   }
 
   Future<void> _onExportTimetable(
