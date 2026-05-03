@@ -27,7 +27,8 @@ import 'package:smart_univ/data/datasources/event_remote_datasource.dart';
 import 'package:smart_univ/data/datasources/event_remote_datasource_impl.dart';
 import 'package:smart_univ/data/repositories/announcement_repository_impl.dart';
 import 'package:smart_univ/data/repositories/event_repository_impl.dart';
-import 'package:smart_univ/data/repositories/stub_auth_repository.dart';
+import 'package:smart_univ/core/services/secure_storage_service.dart';
+import 'package:smart_univ/data/repositories/auth_repository_impl.dart';
 import 'package:smart_univ/data/repositories/stub_timetable_repository.dart';
 import 'package:smart_univ/domain/repositories/announcement_repository.dart';
 import 'package:smart_univ/domain/repositories/auth_repository.dart';
@@ -64,6 +65,7 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
   sl.registerLazySingleton(() => LocationService(sl<PermissionService>()));
   sl.registerLazySingleton(() => ShakeDetectorService());
   sl.registerLazySingleton(() => NotificationService());
+  sl.registerLazySingleton(() => SecureStorageService());
 
   // ── Local Database ───────────────────────────────────────────────────────────
   sl.registerLazySingleton(() => AppDatabase());
@@ -120,7 +122,7 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
     ),
   );
   sl.registerLazySingleton<AuthRepository>(
-    () => StubAuthRepository(),
+    () => AuthRepositoryImpl(sl<SecureStorageService>()),
   );
   sl.registerLazySingleton<TimetableRepository>(
     () => StubTimetableRepository(),
@@ -146,7 +148,7 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
 
   // ── BLoCs ───────────────────────────────────────────────────────────────────
   sl.registerFactory(() => HomeBloc(sl<ShakeDetectorService>(), sl<ScheduleRemindersUseCase>()));
-  sl.registerFactory(() => TimetableBloc(sl<GetTimetableUseCase>(), sl<ScheduleRemindersUseCase>()));
+  sl.registerFactory(() => TimetableBloc(sl<GetTimetableUseCase>(), sl<ScheduleRemindersUseCase>(), sl<NotificationService>()));
   sl.registerFactory(() => AnnouncementsBloc(sl<GetAnnouncementsUseCase>()));
   sl.registerFactory(
     () => EventsBloc(
@@ -155,8 +157,8 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
       sl<EventRepository>(),
     ),
   );
-  sl.registerFactory(() => AuthBloc(sl()));
+  sl.registerFactory(() => AuthBloc(sl<AuthRepository>(), sl<NotificationService>()));
   sl.registerFactory(
-    () => SettingsBloc(sl<SettingsService>(), sl<ExportTimetableUseCase>()),
+    () => SettingsBloc(sl<SettingsService>(), sl<ExportTimetableUseCase>(), sl<NotificationService>()),
   );
 }
