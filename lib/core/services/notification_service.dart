@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -24,11 +25,15 @@ class NotificationService {
       requestBadgePermission: false,
       requestSoundPermission: false,
     );
+    const linuxSettings = LinuxInitializationSettings(
+      defaultActionName: 'Open',
+    );
     await _plugin.initialize(
-      const InitializationSettings(
+      InitializationSettings(
         android: androidSettings,
         iOS: darwinSettings,
         macOS: darwinSettings,
+        linux: Platform.isLinux ? linuxSettings : null,
       ),
       onDidReceiveNotificationResponse: navigatorKey == null
           ? null
@@ -51,8 +56,13 @@ class NotificationService {
     } catch (_) {}
   }
 
-  Future<NotificationAppLaunchDetails?> getAppLaunchDetails() =>
-      _plugin.getNotificationAppLaunchDetails();
+  Future<NotificationAppLaunchDetails?> getAppLaunchDetails() async {
+    try {
+      return await _plugin.getNotificationAppLaunchDetails();
+    } on UnimplementedError {
+      return null;
+    }
+  }
 
   Future<void> _createAndroidChannels() async {
     final impl = _plugin.resolvePlatformSpecificImplementation<
@@ -134,6 +144,8 @@ class NotificationService {
           iOS: const DarwinNotificationDetails(),
         ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
         payload: payload,
       );
     } catch (_) {}
