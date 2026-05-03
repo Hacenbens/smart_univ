@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -26,6 +28,20 @@ import 'package:smart_univ/features/home/presentation/bloc/home_bloc.dart';
 import 'package:smart_univ/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:smart_univ/features/timetable/presentation/bloc/timetable_bloc.dart';
 
+/// iOS BGTaskScheduler entry point — called by the headless FlutterEngine in
+/// AppDelegate. Registers a MethodChannel handler so Swift can invoke the sync.
+@pragma('vm:entry-point')
+Future<void> backgroundMain() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initDependencies();
+  const channel = MethodChannel('com.smartcampus/background_sync');
+  channel.setMethodCallHandler((call) async {
+    if (call.method == 'announcementSync') {
+      await sl<AnnouncementSyncUseCase>().call();
+    }
+  });
+}
+
 // Must be a top-level function so WorkManager's background isolate can resolve
 // the symbol. The @pragma prevents AOT tree-shaking in release builds.
 @pragma('vm:entry-point')
@@ -43,19 +59,42 @@ void callbackDispatcher() {
   });
 }
 
+String _resolveLinuxTimezone() {
+  try {
+    final link = Link('/etc/localtime');
+    final target = link.resolveSymbolicLinksSync();
+    const marker = '/zoneinfo/';
+    final idx = target.indexOf(marker);
+    if (idx != -1) return target.substring(idx + marker.length);
+  } catch (_) {}
+  try {
+    final name = File('/etc/timezone').readAsStringSync().trim();
+    if (name.isNotEmpty) return name;
+  } catch (_) {}
+  return 'UTC';
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
   tz.initializeTimeZones();
-  tz.setLocalLocation(tz.getLocation(await FlutterTimezone.getLocalTimezone()));
+  String timezoneName;
+  try {
+    timezoneName = await FlutterTimezone.getLocalTimezone();
+  } on MissingPluginException {
+    timezoneName = _resolveLinuxTimezone();
+  }
+  tz.setLocalLocation(tz.getLocation(timezoneName));
   await initDependencies();
-  await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
-  await Workmanager().registerPeriodicTask(
-    'announcement-sync',
-    'announcementSync',
-    frequency: const Duration(minutes: 15),
-    constraints: Constraints(networkType: NetworkType.connected),
-  );
+  if (Platform.isAndroid) {
+    await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+    await Workmanager().registerPeriodicTask(
+      'announcement-sync',
+      'announcementSync',
+      frequency: const Duration(minutes: 15),
+      constraints: Constraints(networkType: NetworkType.connected),
+    );
+  }
   await sl<NotificationService>().init(navigatorKey: AppRouter.navigatorKey);
   await sl<AppInitializationUseCase>().call();
   await _seedTimetableData();

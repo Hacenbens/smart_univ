@@ -39,13 +39,26 @@ class _TimetablePageState extends State<TimetablePage> {
               itemCount: items.length,
               itemBuilder: (context, index) {
                 final item = items[index];
-                return ListTile(
-                  title: Text(item.subject),
-                  subtitle: Text('${item.room} • ${item.instructor}'),
-                  trailing: Text(
-                    '${TimeOfDay.fromDateTime(item.startTime).format(context)}'
-                    ' – '
-                    '${TimeOfDay.fromDateTime(item.endTime).format(context)}',
+                return Dismissible(
+                  key: ValueKey(item.id),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 20),
+                    color: Theme.of(context).colorScheme.error,
+                    child: const Icon(Icons.delete_outline, color: Colors.white),
+                  ),
+                  onDismissed: (_) => context
+                      .read<TimetableBloc>()
+                      .add(TimetableItemDeleted(item)),
+                  child: ListTile(
+                    title: Text(item.subject),
+                    subtitle: Text('${item.room} • ${item.instructor}'),
+                    trailing: Text(
+                      '${TimeOfDay.fromDateTime(item.startTime).format(context)}'
+                      ' – '
+                      '${TimeOfDay.fromDateTime(item.endTime).format(context)}',
+                    ),
                   ),
                 );
               },
