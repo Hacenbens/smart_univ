@@ -7,17 +7,22 @@ import 'package:smart_univ/features/auth/presentation/pages/login_page.dart';
 import 'package:smart_univ/features/events/presentation/pages/events_page.dart';
 import 'package:smart_univ/features/map/presentation/pages/map_screen.dart';
 import 'package:smart_univ/features/settings/presentation/pages/settings_page.dart';
+import 'package:smart_univ/features/timetable/presentation/pages/timetable_detail_screen.dart';
 import 'package:smart_univ/features/timetable/presentation/pages/timetable_page.dart';
 import 'package:smart_univ/presentation/pages/home_page.dart';
 import 'package:smart_univ/presentation/shell/scaffold_with_nav_bar.dart';
 
 class AppRouter {
-  final AuthState authState;
+  static final navigatorKey = GlobalKey<NavigatorState>();
 
-  AppRouter(this.authState);
+  final AuthState authState;
+  final String? initialLocation;
+
+  AppRouter(this.authState, {this.initialLocation});
 
   late final GoRouter router = GoRouter(
-    initialLocation: '/home',
+    navigatorKey: navigatorKey,
+    initialLocation: initialLocation ?? '/home',
     debugLogDiagnostics: true,
     observers: [AppGoRouterObserver()],
     refreshListenable: authState,
@@ -56,6 +61,15 @@ class AppRouter {
           GoRoute(
             path: '/timetable',
             builder: (context, state) => const TimetablePage(),
+            routes: [
+              GoRoute(
+                path: ':id',
+                builder: (context, state) {
+                  final id = int.parse(state.pathParameters['id']!);
+                  return TimetableDetailScreen(id: id);
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/settings',
