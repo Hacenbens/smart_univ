@@ -3,13 +3,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_univ/core/widgets/widgets.dart';
 import 'package:smart_univ/domain/entities/announcement.dart';
 import 'package:smart_univ/features/announcements/presentation/bloc/announcements_bloc.dart';
+import 'package:smart_univ/features/home/presentation/bloc/home_bloc.dart';
 
 class AnnouncementsPage extends StatelessWidget {
   const AnnouncementsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocListener<HomeBloc, HomeState>(
+      listener: (context, state) {
+        if (state is HomeShakeDetected) {
+          context.read<AnnouncementsBloc>().add(const AnnouncementsRefreshRequested());
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(title: const Text('Announcements')),
       body: BlocBuilder<AnnouncementsBloc, AnnouncementsState>(
         builder: (context, state) => switch (state) {
@@ -31,6 +38,7 @@ class AnnouncementsPage extends StatelessWidget {
               onRetry: () => context.read<AnnouncementsBloc>().add(const AnnouncementsRequested()),
             ),
         },
+      ),
       ),
     );
   }
