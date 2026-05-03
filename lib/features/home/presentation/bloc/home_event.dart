@@ -10,3 +10,7 @@ sealed class HomeEvent extends Equatable {
 final class _HomeShakeReceived extends HomeEvent {
   const _HomeShakeReceived();
 }
+
+final class _HomeAppResumed extends HomeEvent {
+  const _HomeAppResumed();
+}
