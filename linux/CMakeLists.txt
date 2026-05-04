@@ -75,6 +75,15 @@ set_target_properties(${BINARY_NAME}
 # them to the application.
 include(flutter/generated_plugins.cmake)
 
+# flutter_secure_storage_linux bundles nlohmann/json with the pre-C++17
+# space-before-literal-operator syntax (operator "" _json). Clang 16+ emits
+# -Wdeprecated-literal-operator; -Werror makes it fatal. Suppress it only for
+# this target so the rest of the build stays strict.
+if(TARGET flutter_secure_storage_linux_plugin)
+  target_compile_options(flutter_secure_storage_linux_plugin PRIVATE
+    -Wno-deprecated-literal-operator)
+endif()
+
 
 # === Installation ===
 # By default, "installing" just makes a relocatable bundle in the build
