@@ -57,24 +57,22 @@ class _SignUpPageState extends State<SignUpPage> {
         },
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Join SmartCampus',
-                    style: Theme.of(context).textTheme.headlineSmall,
+                    'Create your account',
+                    style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Fill in your student details to get started.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 28),
                   TextFormField(
                     controller: _fullNameController,
                     textCapitalization: TextCapitalization.words,
@@ -86,7 +84,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     validator: (v) =>
                         (v == null || v.trim().isEmpty) ? 'Required' : null,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                   TextFormField(
                     controller: _studentIdController,
                     textInputAction: TextInputAction.next,
@@ -171,7 +169,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
                   BlocBuilder<AuthBloc, AuthBlocState>(
                     builder: (context, state) {
                       final loading = state is AuthLoading;
