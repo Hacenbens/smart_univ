@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:nfc_manager/nfc_manager.dart';
+import 'package:smart_univ/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:smart_univ/features/settings/presentation/bloc/settings_bloc.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -57,6 +58,9 @@ class SettingsPage extends StatelessWidget {
             const Divider(height: 1),
             _SectionHeader('Hardware'),
             const _HardwareCapabilityCard(),
+            const Divider(height: 1),
+            _SectionHeader('Account'),
+            const _SignOutTile(),
           ],
         ),
       ),
@@ -249,6 +253,46 @@ class _HardwareCapabilityCardState extends State<_HardwareCapabilityCard> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SignOutTile extends StatelessWidget {
+  const _SignOutTile();
+
+  Future<void> _confirmSignOut(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sign out'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            child: const Text('Sign out'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      context.read<AuthBloc>().add(const AuthSignOutRequested());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final errorColor = Theme.of(context).colorScheme.error;
+    return ListTile(
+      leading: Icon(Icons.logout, color: errorColor),
+      title: Text('Sign out', style: TextStyle(color: errorColor)),
+      onTap: () => _confirmSignOut(context),
     );
   }
 }
