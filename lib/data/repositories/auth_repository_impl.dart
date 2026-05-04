@@ -26,6 +26,34 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._storage);
 
   @override
+  Future<Either<AppException, UserProfile>> signUp({
+    required String fullName,
+    required String studentId,
+    required String department,
+    required String email,
+    required String password,
+  }) async {
+    if (password.length < 8) {
+      return left(const AuthException('Password must be at least 8 characters'));
+    }
+    final profile = UserProfile(
+      id: 'u_${DateTime.now().millisecondsSinceEpoch}',
+      fullName: fullName.trim(),
+      email: email.trim(),
+      studentId: studentId.trim(),
+      department: department.trim(),
+    );
+    final expiry = DateTime.now().add(const Duration(hours: 1));
+    await Future.wait([
+      _storage.saveToken(SecureStorageService.accessKey, 'mock_access_${profile.id}'),
+      _storage.saveToken(SecureStorageService.refreshKey, 'mock_refresh_${profile.id}'),
+      _storage.saveToken(SecureStorageService.expiryKey, expiry.toIso8601String()),
+      _storage.saveToken(_profileKey, _encodeProfile(profile)),
+    ]);
+    return right(profile);
+  }
+
+  @override
   Future<Either<AppException, UserProfile>> signIn({
     required String email,
     required String password,

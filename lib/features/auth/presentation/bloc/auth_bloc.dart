@@ -12,6 +12,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthBlocState> {
 
   AuthBloc(this._repository, this._notif) : super(AuthInitial()) {
     on<AuthCheckRequested>(_onCheckRequested);
+    on<AuthSignUpRequested>(_onSignUpRequested);
     on<AuthSignInRequested>(_onSignInRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
   }
@@ -22,6 +23,24 @@ class AuthBloc extends Bloc<AuthEvent, AuthBlocState> {
   ) async {
     final loggedIn = await _repository.isLoggedIn();
     emit(loggedIn ? const AuthAuthenticated() : const AuthUnauthenticated());
+  }
+
+  Future<void> _onSignUpRequested(
+    AuthSignUpRequested event,
+    Emitter<AuthBlocState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final result = await _repository.signUp(
+      fullName: event.fullName,
+      studentId: event.studentId,
+      department: event.department,
+      email: event.email,
+      password: event.password,
+    );
+    result.fold(
+      (failure) => emit(AuthFailure(failure.message)),
+      (_) => emit(const AuthAuthenticated()),
+    );
   }
 
   Future<void> _onSignInRequested(
