@@ -27,6 +27,7 @@ import 'package:smart_univ/data/datasources/event_remote_datasource.dart';
 import 'package:smart_univ/data/datasources/event_remote_datasource_impl.dart';
 import 'package:smart_univ/data/repositories/announcement_repository_impl.dart';
 import 'package:smart_univ/data/repositories/event_repository_impl.dart';
+import 'package:smart_univ/core/services/screen_security_service.dart';
 import 'package:smart_univ/core/services/secure_storage_service.dart';
 import 'package:smart_univ/data/repositories/auth_repository_impl.dart';
 import 'package:smart_univ/data/repositories/stub_timetable_repository.dart';
@@ -66,6 +67,7 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
   sl.registerLazySingleton(() => ShakeDetectorService());
   sl.registerLazySingleton(() => NotificationService());
   sl.registerLazySingleton(() => SecureStorageService());
+  sl.registerLazySingleton(() => ScreenSecurityService());
 
   // ── Local Database ───────────────────────────────────────────────────────────
   sl.registerLazySingleton(() => AppDatabase());
