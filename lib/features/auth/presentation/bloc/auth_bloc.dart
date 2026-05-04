@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:smart_univ/core/services/notification_service.dart';
+import 'package:smart_univ/domain/entities/user_profile.dart';
 import 'package:smart_univ/domain/repositories/auth_repository.dart';
 
 part 'auth_event.dart';
@@ -22,7 +23,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthBlocState> {
     Emitter<AuthBlocState> emit,
   ) async {
     final loggedIn = await _repository.isLoggedIn();
-    emit(loggedIn ? const AuthAuthenticated() : const AuthUnauthenticated());
+    if (!loggedIn) {
+      emit(const AuthUnauthenticated());
+      return;
+    }
+    final result = await _repository.getCurrentUser();
+    final user = result.fold((_) => null, (u) => u);
+    emit(AuthAuthenticated(user: user));
   }
 
   Future<void> _onSignUpRequested(
@@ -39,7 +46,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthBlocState> {
     );
     result.fold(
       (failure) => emit(AuthFailure(failure.message)),
-      (_) => emit(const AuthAuthenticated()),
+      (user) => emit(AuthAuthenticated(user: user)),
     );
   }
 
@@ -54,7 +61,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthBlocState> {
     );
     result.fold(
       (failure) => emit(AuthFailure(failure.message)),
-      (_) => emit(const AuthAuthenticated()),
+      (user) => emit(AuthAuthenticated(user: user)),
     );
   }
 
