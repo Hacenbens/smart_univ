@@ -20,9 +20,11 @@ class AppInitializationUseCase {
       _announcementsDao.deleteOlderThan(cutoff),
       _eventsDao.deleteOlderThan(cutoff),
     ]);
-    debugPrint(
-      '[AppInit] Cache eviction: pruned ${counts[0]} announcement(s) '
-      'and ${counts[1]} event(s) older than 7 days.',
-    );
+    if (kDebugMode) {
+      debugPrint(
+        '[AppInit] Cache eviction: pruned ${counts[0]} announcement(s) '
+        'and ${counts[1]} event(s) older than 7 days.',
+      );
+    }
   }
 }

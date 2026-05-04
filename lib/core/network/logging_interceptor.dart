@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 class LoggingInterceptor extends Interceptor {
@@ -27,8 +28,7 @@ class LoggingInterceptor extends Interceptor {
 
   static void _write(String line) {
     assert(() {
-      // ignore: avoid_print
-      print(line);
+      debugPrint(line);
       _logFile?.writeAsStringSync('$line\n', mode: FileMode.append);
       return true;
     }());

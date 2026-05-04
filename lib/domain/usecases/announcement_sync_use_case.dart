@@ -1,4 +1,4 @@
-import 'dart:developer';
+import 'package:flutter/foundation.dart';
 
 import 'package:smart_univ/domain/repositories/announcement_repository.dart';
 
@@ -11,11 +11,15 @@ class AnnouncementSyncUseCase {
     try {
       final result = await _repository.getAnnouncements();
       result.fold(
-        (e) => log('AnnouncementSyncUseCase: $e'),
+        (e) {
+          if (kDebugMode) debugPrint('AnnouncementSyncUseCase: $e');
+        },
         (_) {},
       );
     } catch (e, st) {
-      log('AnnouncementSyncUseCase: unexpected error: $e', stackTrace: st);
+      if (kDebugMode) {
+        debugPrint('AnnouncementSyncUseCase: unexpected error: $e\n$st');
+      }
     }
   }
 }
