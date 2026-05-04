@@ -39,6 +39,11 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
+# Release debug symbols (--split-debug-info output).
+# Already covered by /build/ above, but listed explicitly as a reminder:
+# back these up to secure storage — never commit them.
+/build/debug-info/
+
 # Generated Dart files
 *.g.dart
 *.freezed.dart
