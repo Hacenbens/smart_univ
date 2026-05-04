@@ -57,7 +57,7 @@ class AppRouter {
         routes: [
           GoRoute(
             path: '/home',
-            builder: (context, state) => HomePage(authState: authState),
+            builder: (context, state) => const HomePage(),
           ),
           GoRoute(
             path: '/announcements',

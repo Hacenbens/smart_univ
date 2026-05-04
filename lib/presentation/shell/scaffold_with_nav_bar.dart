@@ -7,7 +7,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
   final Widget child;
   const ScaffoldWithNavBar({super.key, required this.child});
 
-  static const _tabs = ['/home', '/announcements', '/events', '/map', '/timetable', '/settings'];
+  static const _tabs = ['/home', '/timetable', '/map', '/settings'];
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
@@ -23,16 +23,17 @@ class ScaffoldWithNavBar extends StatelessWidget {
           BlocBuilder<ConnectivityCubit, bool>(
             builder: (context, isConnected) => AnimatedContainer(
               duration: const Duration(milliseconds: 300),
-              height: isConnected ? 0 : 32,
-              color: Colors.amber.shade700,
+              height: isConnected ? 0 : 36,
+              color: const Color(0xFFFBF1DC),
               child: ClipRect(
                 child: Center(
                   child: Text(
                     'You are offline — showing cached content',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Colors.black87,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFFC58A1A),
+                    ),
                   ),
                 ),
               ),
@@ -51,29 +52,19 @@ class ScaffoldWithNavBar extends StatelessWidget {
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.campaign_outlined),
-            selectedIcon: Icon(Icons.campaign),
-            label: 'Announcements',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.event_outlined),
-            selectedIcon: Icon(Icons.event),
-            label: 'Events',
+            icon: Icon(Icons.calendar_today_outlined),
+            selectedIcon: Icon(Icons.calendar_today),
+            label: 'Schedule',
           ),
           NavigationDestination(
             icon: Icon(Icons.map_outlined),
             selectedIcon: Icon(Icons.map),
-            label: 'Map',
+            label: 'Campus',
           ),
           NavigationDestination(
-            icon: Icon(Icons.calendar_today_outlined),
-            selectedIcon: Icon(Icons.calendar_today),
-            label: 'Timetable',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Settings',
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Me',
           ),
         ],
       ),
