@@ -6,6 +6,7 @@ import 'package:smart_univ/core/router/go_router_observer.dart';
 import 'package:smart_univ/domain/repositories/auth_repository.dart';
 import 'package:smart_univ/features/announcements/presentation/pages/announcements_page.dart';
 import 'package:smart_univ/features/auth/presentation/pages/login_page.dart';
+import 'package:smart_univ/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:smart_univ/features/events/presentation/pages/events_page.dart';
 import 'package:smart_univ/features/map/presentation/pages/map_screen.dart';
 import 'package:smart_univ/features/settings/presentation/pages/settings_page.dart';
@@ -30,10 +31,11 @@ class AppRouter {
     refreshListenable: authState,
     redirect: (BuildContext context, GoRouterState state) async {
       final repo = sl<AuthRepository>();
-      final onLogin = state.matchedLocation == '/login';
+      final onAuthPage = state.matchedLocation == '/login' ||
+          state.matchedLocation == '/signup';
 
-      if (!await repo.isLoggedIn()) return onLogin ? null : '/login';
-      if (onLogin) return '/home';
+      if (!await repo.isLoggedIn()) return onAuthPage ? null : '/login';
+      if (onAuthPage) return '/home';
 
       if (!await repo.isSessionValid()) {
         if (!await repo.refreshSession()) return '/login';
@@ -45,6 +47,10 @@ class AppRouter {
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: '/signup',
+        builder: (context, state) => const SignUpPage(),
       ),
       ShellRoute(
         builder: (context, state, child) => ScaffoldWithNavBar(child: child),

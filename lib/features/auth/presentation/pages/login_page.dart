@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:smart_univ/features/auth/presentation/bloc/auth_bloc.dart';
 
 class LoginPage extends StatefulWidget {
@@ -106,6 +107,17 @@ class _LoginPageState extends State<LoginPage> {
                               : const Text('Sign in'),
                         );
                       },
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text("Don't have an account?"),
+                        TextButton(
+                          onPressed: () => context.go('/signup'),
+                          child: const Text('Sign up'),
+                        ),
+                      ],
                     ),
                   ],
                 ),
