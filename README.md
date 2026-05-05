@@ -15,6 +15,11 @@ A Flutter application for university students, providing a smart campus experien
 | `json_serializable` + `build_runner` | DTO code generation |
 | `path_provider` | Debug log file storage |
 | `mocktail` | Mocking in unit tests |
+| `local_auth` | Biometric authentication (fingerprint / face) |
+| `flutter_secure_storage` | Encrypted token and credential storage |
+| `shared_preferences` | User settings persistence |
+| `workmanager` | Background task scheduling |
+| `flutter_local_notifications` | Local push notifications |
 
 ## Architecture
 
@@ -41,10 +46,10 @@ lib/
 │   ├── repositories/    # Abstract interfaces
 │   └── usecases/        # Use case classes
 └── features/
-    ├── announcements/   # AnnouncementsBloc + AnnouncementsPage
-    ├── auth/            # AuthBloc
+    ├── announcements/   # AnnouncementsBloc + AnnouncementsPage (category filters)
+    ├── auth/            # AuthBloc (email + biometric login)
     ├── events/          # EventsBloc + EventsPage
-    ├── settings/        # SettingsBloc (theme mode)
+    ├── settings/        # SettingsBloc (theme, language, biometric toggle)
     └── timetable/       # (planned)
 ```
 
@@ -60,7 +65,13 @@ lib/
 
 **Navigation** — Tab routes wrapped in `ShellRoute` with `ScaffoldWithNavBar`. `/login` sits outside the shell. `GoRouter` redirect uses `AuthState` as `refreshListenable`.
 
-**Debug logging** — `LoggingInterceptor` writes structured request/response/error logs to `dio_logs.txt` via `path_provider`. Falls back to console-only in test environments.
+**Debug logging** — `LoggingInterceptor` writes structured request/response/error logs to `dio_logs.txt` via `path_provider`. Falls back to console-only in test environments. All log calls are gated behind `kDebugMode` so nothing leaks into release builds.
+
+**Biometric authentication** — `BiometricService` wraps `local_auth`. On first sign-in, credentials are saved to `flutter_secure_storage`. The biometric flow reads the stored profile and calls `restoreSession()` rather than re-sending credentials. The toggle in Settings verifies biometric availability and requires a successful prompt before persisting the preference. Sign-out preserves the stored profile/credentials so biometric re-auth works on the next launch.
+
+**Announcement filters** — `AnnouncementFilter` enum lives in `AnnouncementsState`. The active filter is part of bloc state; filter chip taps dispatch `AnnouncementFilterChanged`. `AnnouncementsPage` is a `StatelessWidget` — no local `setState` for filter selection.
+
+**Screen security** — `FLAG_SECURE` is applied on Android to the auth screen so the content is excluded from recent-apps thumbnails and screen recordings. Release builds use `--obfuscate` and `--split-debug-info` (see `scripts/build_release.sh`).
 
 ## Branching Strategy
 
