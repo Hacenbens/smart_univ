@@ -15,6 +15,10 @@
 
     <!-- High-frequency sensors: step counting and indoor positioning -->
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS"/>
+
+    <!-- Biometric authentication -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <uses-permission android:name="android.permission.USE_FINGERPRINT"/>
     <application
         android:label="smart_univ"
         android:name="${applicationName}"

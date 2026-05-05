@@ -18,6 +18,7 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -37,6 +38,8 @@ android {
         versionName = flutter.versionName
         manifestPlaceholders["googleMapsApiKey"] =
             localProps.getProperty("GOOGLE_MAPS_API_KEY") ?: ""
+        manifestPlaceholders["auth0Domain"] = "dev-52jntkcwwsdzizza.us.auth0.com"
+        manifestPlaceholders["auth0Scheme"] = "https"
     }
 
     buildTypes {
@@ -50,4 +53,8 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
