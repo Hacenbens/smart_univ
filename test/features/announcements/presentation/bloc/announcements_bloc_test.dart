@@ -57,8 +57,8 @@ void main() {
       );
 
       final loaded = bloc.state as AnnouncementsLoaded;
-      expect(loaded.announcements.length, 1);
-      expect(loaded.announcements.first.title, 'Test');
+      expect(loaded.allAnnouncements.length, 1);
+      expect(loaded.allAnnouncements.first.title, 'Test');
     });
 
     test('emits Loading then Failure on error', () async {

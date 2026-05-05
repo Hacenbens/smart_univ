@@ -513,9 +513,9 @@ class _AnnouncementsPreview extends StatelessWidget {
 
     Announcement? first;
     int count = 0;
-    if (annState is AnnouncementsLoaded && annState.announcements.isNotEmpty) {
-      first = annState.announcements.first;
-      count = annState.announcements.length;
+    if (annState is AnnouncementsLoaded && annState.allAnnouncements.isNotEmpty) {
+      first = annState.allAnnouncements.first;
+      count = annState.allAnnouncements.length;
     }
 
     return Column(

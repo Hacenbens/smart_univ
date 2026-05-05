@@ -5,17 +5,16 @@ import 'package:smart_univ/domain/entities/announcement.dart';
 import 'package:smart_univ/features/announcements/presentation/bloc/announcements_bloc.dart';
 import 'package:smart_univ/features/home/presentation/bloc/home_bloc.dart';
 
-class AnnouncementsPage extends StatefulWidget {
+class AnnouncementsPage extends StatelessWidget {
   const AnnouncementsPage({super.key});
 
-  @override
-  State<AnnouncementsPage> createState() => _AnnouncementsPageState();
-}
-
-class _AnnouncementsPageState extends State<AnnouncementsPage> {
-  int _selectedFilter = 0;
-
-  static const _filters = ['All', 'Pinned', 'Academic', 'Campus life', 'Services'];
+  static const _filterLabels = [
+    (AnnouncementFilter.all, 'All'),
+    (AnnouncementFilter.pinned, 'Pinned'),
+    (AnnouncementFilter.academic, 'Academic'),
+    (AnnouncementFilter.campusLife, 'Campus life'),
+    (AnnouncementFilter.services, 'Services'),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +32,6 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
                 child: Row(
@@ -62,53 +60,79 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
                   ],
                 ),
               ),
-              // Filter chips
-              SizedBox(
-                height: 44,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: _filters.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (context, i) => FilterChip(
-                    label: Text(_filters[i]),
-                    selected: _selectedFilter == i,
-                    onSelected: (_) => setState(() => _selectedFilter = i),
-                    selectedColor: cs.primary,
-                    checkmarkColor: Colors.white,
-                    labelStyle: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _selectedFilter == i ? Colors.white : cs.onSurfaceVariant,
+              // Filter chips — driven by bloc state
+              BlocBuilder<AnnouncementsBloc, AnnouncementsState>(
+                buildWhen: (prev, curr) =>
+                    (prev is AnnouncementsLoaded ? prev.activeFilter : null) !=
+                    (curr is AnnouncementsLoaded ? curr.activeFilter : null),
+                builder: (context, state) {
+                  final active = state is AnnouncementsLoaded
+                      ? state.activeFilter
+                      : AnnouncementFilter.all;
+                  return SizedBox(
+                    height: 44,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: _filterLabels.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (context, i) {
+                        final (filter, label) = _filterLabels[i];
+                        final selected = active == filter;
+                        return FilterChip(
+                          label: Text(label),
+                          selected: selected,
+                          onSelected: (_) => context
+                              .read<AnnouncementsBloc>()
+                              .add(AnnouncementFilterChanged(filter)),
+                          selectedColor: cs.primary,
+                          checkmarkColor: Colors.white,
+                          labelStyle: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: selected ? Colors.white : cs.onSurfaceVariant,
+                          ),
+                          backgroundColor: cs.surface,
+                          side: BorderSide(color: cs.outlineVariant),
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          showCheckmark: false,
+                        );
+                      },
                     ),
-                    backgroundColor: cs.surface,
-                    side: BorderSide(color: cs.outlineVariant),
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    showCheckmark: false,
-                  ),
-                ),
+                  );
+                },
               ),
               const SizedBox(height: 4),
-              // List
               Expanded(
                 child: BlocBuilder<AnnouncementsBloc, AnnouncementsState>(
                   builder: (context, state) => switch (state) {
                     AnnouncementsInitial() => _buildInitial(context),
                     AnnouncementsLoading() =>
                       const LoadingWidget(message: 'Loading announcements…'),
-                    AnnouncementsLoaded(:final announcements)
-                        when announcements.isEmpty =>
+                    AnnouncementsLoaded() when state.filtered.isEmpty =>
                       EmptyStateWidget(
                         icon: Icons.campaign_outlined,
-                        title: 'No announcements',
-                        subtitle: 'Check back later for updates.',
-                        actionLabel: 'Refresh',
-                        onAction: () => context
-                            .read<AnnouncementsBloc>()
-                            .add(const AnnouncementsRequested()),
+                        title: state.allAnnouncements.isEmpty
+                            ? 'No announcements'
+                            : 'No announcements here',
+                        subtitle: state.allAnnouncements.isEmpty
+                            ? 'Check back later for updates.'
+                            : 'Try a different filter.',
+                        actionLabel: state.allAnnouncements.isEmpty ? 'Refresh' : 'Show all',
+                        onAction: () {
+                          if (state.allAnnouncements.isEmpty) {
+                            context
+                                .read<AnnouncementsBloc>()
+                                .add(const AnnouncementsRequested());
+                          } else {
+                            context
+                                .read<AnnouncementsBloc>()
+                                .add(const AnnouncementFilterChanged(AnnouncementFilter.all));
+                          }
+                        },
                       ),
-                    AnnouncementsLoaded(:final announcements) =>
-                      _AnnouncementList(announcements: announcements),
+                    AnnouncementsLoaded() =>
+                      _AnnouncementList(announcements: state.filtered),
                     AnnouncementsFailure(:final message) => AppErrorWidget(
                         title: 'Could not load announcements',
                         message: message,
@@ -156,7 +180,19 @@ class _AnnouncementCard extends StatelessWidget {
   final Announcement announcement;
   const _AnnouncementCard({required this.announcement});
 
-  static const _accentColor = Color(0xFFC97A4A);
+  static Color _categoryColor(AnnouncementCategory cat) => switch (cat) {
+        AnnouncementCategory.academic => const Color(0xFF3B82F6),
+        AnnouncementCategory.campusLife => const Color(0xFF22C55E),
+        AnnouncementCategory.services => const Color(0xFFA855F7),
+        AnnouncementCategory.general => const Color(0xFFC97A4A),
+      };
+
+  static String _categoryLabel(AnnouncementCategory cat) => switch (cat) {
+        AnnouncementCategory.academic => 'Academic',
+        AnnouncementCategory.campusLife => 'Campus life',
+        AnnouncementCategory.services => 'Services',
+        AnnouncementCategory.general => 'General',
+      };
 
   String _timeAgo(DateTime date) {
     final diff = DateTime.now().difference(date);
@@ -168,6 +204,7 @@ class _AnnouncementCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final accent = _categoryColor(announcement.category);
 
     return Container(
       decoration: BoxDecoration(
@@ -183,7 +220,7 @@ class _AnnouncementCard extends StatelessWidget {
             width: 4,
             height: 70,
             decoration: BoxDecoration(
-              color: _accentColor,
+              color: accent,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -194,10 +231,11 @@ class _AnnouncementCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
+                    // Category badge
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: _accentColor.withValues(alpha: 0.12),
+                        color: accent.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Row(
@@ -206,23 +244,27 @@ class _AnnouncementCard extends StatelessWidget {
                           Container(
                             width: 6,
                             height: 6,
-                            decoration: const BoxDecoration(
-                              color: _accentColor,
+                            decoration: BoxDecoration(
+                              color: accent,
                               shape: BoxShape.circle,
                             ),
                           ),
                           const SizedBox(width: 5),
                           Text(
-                            announcement.authorName,
-                            style: const TextStyle(
+                            _categoryLabel(announcement.category),
+                            style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: _accentColor,
+                              color: accent,
                             ),
                           ),
                         ],
                       ),
                     ),
+                    if (announcement.isPinned) ...[
+                      const SizedBox(width: 6),
+                      Icon(Icons.push_pin, size: 13, color: cs.onSurfaceVariant),
+                    ],
                     const Spacer(),
                     Text(
                       _timeAgo(announcement.publishedAt),

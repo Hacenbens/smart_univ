@@ -28,5 +28,14 @@ class AnnouncementDto {
         body: body,
         publishedAt: DateTime.utc(2024),
         authorName: 'User $userId',
+        category: _categoryFromId(id),
+        isPinned: id % 5 == 0,
       );
+
+  static AnnouncementCategory _categoryFromId(int id) => switch (id % 4) {
+        0 => AnnouncementCategory.academic,
+        1 => AnnouncementCategory.campusLife,
+        2 => AnnouncementCategory.services,
+        _ => AnnouncementCategory.general,
+      };
 }
