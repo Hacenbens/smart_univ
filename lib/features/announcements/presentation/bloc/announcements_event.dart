@@ -21,3 +21,12 @@ final class AppLifecycleRefreshRequested extends AnnouncementsEvent {
 final class AnnouncementsRefreshRequested extends AnnouncementsEvent {
   const AnnouncementsRefreshRequested();
 }
+
+final class AnnouncementFilterChanged extends AnnouncementsEvent {
+  final AnnouncementFilter filter;
+
+  const AnnouncementFilterChanged(this.filter);
+
+  @override
+  List<Object?> get props => [filter];
+}

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
@@ -8,7 +9,9 @@ import 'package:timezone/timezone.dart' as tz;
 
 @pragma('vm:entry-point')
 void onDidReceiveBackgroundNotificationResponse(NotificationResponse details) {
-  debugPrint('[Notifications] background action received: ${details.payload}');
+  if (kDebugMode) {
+    debugPrint('[Notifications] background action received: ${details.payload}');
+  }
 }
 
 class NotificationService {

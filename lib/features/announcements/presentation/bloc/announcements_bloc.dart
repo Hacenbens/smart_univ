@@ -23,6 +23,7 @@ class AnnouncementsBloc extends Bloc<AnnouncementsEvent, AnnouncementsState>
     on<AnnouncementsRequested>(_onRequested);
     on<AppLifecycleRefreshRequested>(_onLifecycleRefresh);
     on<AnnouncementsRefreshRequested>(_onShakeRefresh);
+    on<AnnouncementFilterChanged>(_onFilterChanged);
   }
 
   @override
@@ -54,15 +55,28 @@ class AnnouncementsBloc extends Bloc<AnnouncementsEvent, AnnouncementsState>
       _fetch(emit);
 
   Future<void> _fetch(Emitter<AnnouncementsState> emit) async {
+    final previousFilter = state is AnnouncementsLoaded
+        ? (state as AnnouncementsLoaded).activeFilter
+        : AnnouncementFilter.all;
     emit(AnnouncementsLoading());
     final result = await _getAnnouncements(const NoParams());
     result.fold(
       (failure) => emit(AnnouncementsFailure(failure.message)),
       (announcements) {
         lastFetchedAt = DateTime.now();
-        emit(AnnouncementsLoaded(announcements));
+        emit(AnnouncementsLoaded(announcements, activeFilter: previousFilter));
       },
     );
+  }
+
+  void _onFilterChanged(
+    AnnouncementFilterChanged event,
+    Emitter<AnnouncementsState> emit,
+  ) {
+    final current = state;
+    if (current is AnnouncementsLoaded) {
+      emit(current.copyWithFilter(event.filter));
+    }
   }
 
   @override

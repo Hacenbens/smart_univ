@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smart_univ/core/di/injection_container.dart';
+import 'package:smart_univ/core/services/screen_security_service.dart';
 import 'package:smart_univ/features/auth/presentation/bloc/auth_bloc.dart';
 
 class LoginPage extends StatefulWidget {
@@ -17,7 +19,14 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    sl<ScreenSecurityService>().enableSecure();
+  }
+
+  @override
   void dispose() {
+    sl<ScreenSecurityService>().disableSecure();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -158,9 +167,10 @@ class _LoginPageState extends State<LoginPage> {
                     },
                   ),
                   const SizedBox(height: 10),
-                  // Biometric button (visual only)
                   OutlinedButton.icon(
-                    onPressed: () {},
+                    onPressed: () => context
+                        .read<AuthBloc>()
+                        .add(const AuthBiometricRequested()),
                     icon: const Icon(Icons.fingerprint, size: 20),
                     label: const Text('Use biometrics instead'),
                     style: OutlinedButton.styleFrom(

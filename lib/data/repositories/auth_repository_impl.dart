@@ -7,7 +7,6 @@ import 'package:smart_univ/domain/entities/user_profile.dart';
 import 'package:smart_univ/domain/repositories/auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  // Private key — not a token, only AuthRepositoryImpl touches it.
   static const _profileKey = 'auth_profile';
 
   // Mock credentials — replace with real API call in a later sprint.
@@ -49,6 +48,10 @@ class AuthRepositoryImpl implements AuthRepository {
       _storage.saveToken(SecureStorageService.refreshKey, 'mock_refresh_${profile.id}'),
       _storage.saveToken(SecureStorageService.expiryKey, expiry.toIso8601String()),
       _storage.saveToken(_profileKey, _encodeProfile(profile)),
+      _storage.saveToken(
+        SecureStorageService.credentialsKey,
+        jsonEncode({'email': email.trim(), 'password': password}),
+      ),
     ]);
     return right(profile);
   }
@@ -58,6 +61,24 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
   }) async {
+    final storedCreds = await _storage.readToken(SecureStorageService.credentialsKey);
+    if (storedCreds != null) {
+      final creds = jsonDecode(storedCreds) as Map<String, dynamic>;
+      if (email.trim() != creds['email'] || password != creds['password']) {
+        return left(const AuthException('Invalid email or password'));
+      }
+      final raw = await _storage.readToken(_profileKey);
+      if (raw == null) return left(const AuthException('Invalid email or password'));
+      final profile = _decodeProfile(raw);
+      final expiry = DateTime.now().add(const Duration(hours: 1));
+      await Future.wait([
+        _storage.saveToken(SecureStorageService.accessKey, 'mock_access_${profile.id}'),
+        _storage.saveToken(SecureStorageService.refreshKey, 'mock_refresh_${profile.id}'),
+        _storage.saveToken(SecureStorageService.expiryKey, expiry.toIso8601String()),
+      ]);
+      return right(profile);
+    }
+    // Fallback: demo credentials
     if (email.trim() != _mockEmail || password != _mockPassword) {
       return left(const AuthException('Invalid email or password'));
     }
@@ -73,8 +94,12 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<AppException, Unit>> signOut() async {
-    // TODO: call server-side revoke endpoint before clearing local storage.
-    await _storage.deleteAll();
+    // Clear session tokens only — preserve profile + credentials for biometric re-auth.
+    await Future.wait([
+      _storage.deleteToken(SecureStorageService.accessKey),
+      _storage.deleteToken(SecureStorageService.refreshKey),
+      _storage.deleteToken(SecureStorageService.expiryKey),
+    ]);
     return right(unit);
   }
 
@@ -84,6 +109,24 @@ class AuthRepositoryImpl implements AuthRepository {
     final raw = await _storage.readToken(_profileKey);
     if (raw == null) return right(null);
     return right(_decodeProfile(raw));
+  }
+
+  @override
+  Future<Either<AppException, UserProfile?>> getStoredProfile() async {
+    final raw = await _storage.readToken(_profileKey);
+    if (raw == null) return right(null);
+    return right(_decodeProfile(raw));
+  }
+
+  @override
+  Future<Either<AppException, Unit>> restoreSession(UserProfile profile) async {
+    final expiry = DateTime.now().add(const Duration(hours: 1));
+    await Future.wait([
+      _storage.saveToken(SecureStorageService.accessKey, 'mock_access_${profile.id}'),
+      _storage.saveToken(SecureStorageService.refreshKey, 'mock_refresh_${profile.id}'),
+      _storage.saveToken(SecureStorageService.expiryKey, expiry.toIso8601String()),
+    ]);
+    return right(unit);
   }
 
   @override

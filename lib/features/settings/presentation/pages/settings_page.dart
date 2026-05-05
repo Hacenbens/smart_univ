@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:nfc_manager/nfc_manager.dart';
+import 'package:smart_univ/core/di/injection_container.dart';
+import 'package:smart_univ/core/services/biometric_service.dart';
 import 'package:smart_univ/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:smart_univ/features/settings/presentation/bloc/settings_bloc.dart';
 
@@ -20,12 +22,17 @@ class SettingsPage extends StatelessWidget {
       appBar: AppBar(title: const Text('Settings')),
       body: BlocConsumer<SettingsBloc, SettingsState>(
         listenWhen: (prev, curr) =>
-            curr.exportStatus == ExportStatus.failure &&
-            prev.exportStatus != ExportStatus.failure,
+            (curr.exportStatus == ExportStatus.failure &&
+                prev.exportStatus != ExportStatus.failure) ||
+            (curr.biometricError != null &&
+                curr.biometricError != prev.biometricError),
         listener: (context, state) {
+          final msg = state.biometricError != null && state.biometricError != ''
+              ? state.biometricError!
+              : (state.exportError ?? 'Export failed');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.exportError ?? 'Export failed'),
+              content: Text(msg),
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
@@ -55,6 +62,9 @@ class SettingsPage extends StatelessWidget {
             _ExportTile(
               isLoading: state.exportStatus == ExportStatus.loading,
             ),
+            const Divider(height: 1),
+            _SectionHeader('Security'),
+            _BiometricTile(biometricEnabled: state.biometricEnabled),
             const Divider(height: 1),
             _SectionHeader('Hardware'),
             const _HardwareCapabilityCard(),
@@ -293,6 +303,47 @@ class _SignOutTile extends StatelessWidget {
       leading: Icon(Icons.logout, color: errorColor),
       title: Text('Sign out', style: TextStyle(color: errorColor)),
       onTap: () => _confirmSignOut(context),
+    );
+  }
+}
+
+class _BiometricTile extends StatefulWidget {
+  final bool biometricEnabled;
+  const _BiometricTile({required this.biometricEnabled});
+
+  @override
+  State<_BiometricTile> createState() => _BiometricTileState();
+}
+
+class _BiometricTileState extends State<_BiometricTile> {
+  bool? _available;
+
+  @override
+  void initState() {
+    super.initState();
+    sl<BiometricService>().isAvailable().then((v) {
+      if (mounted) setState(() => _available = v);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      secondary: const Icon(Icons.fingerprint),
+      title: const Text('Biometric login'),
+      subtitle: Text(
+        _available == null
+            ? 'Checking availability...'
+            : _available!
+                ? 'Use fingerprint or face to sign in'
+                : 'No biometrics enrolled on this device',
+      ),
+      value: widget.biometricEnabled,
+      onChanged: _available == true
+          ? (enabled) => context
+              .read<SettingsBloc>()
+              .add(BiometricToggleRequested(enabled))
+          : null,
     );
   }
 }

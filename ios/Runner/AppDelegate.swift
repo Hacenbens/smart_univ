@@ -6,6 +6,12 @@ import UIKit
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private static let taskId = "com.yourname.smartcampus.announcementsync"
+  private static let securityChannel = "com.smartcampus/screen_security"
+
+  // Tracks whether the current screen requires privacy protection.
+  private var secureScreenActive = false
+  // The blur view added over the window when backgrounding a secure screen.
+  private var privacyOverlay: UIView?
 
   override func application(
     _ application: UIApplication,
@@ -13,7 +19,6 @@ import UIKit
   ) -> Bool {
     GMSServices.provideAPIKey("YOUR_GOOGLE_MAPS_API_KEY_HERE")
 
-    // Registration must happen before super returns
     BGTaskScheduler.shared.register(
       forTaskWithIdentifier: Self.taskId,
       using: nil
@@ -28,12 +33,56 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+
+    FlutterMethodChannel(
+      name: Self.securityChannel,
+      binaryMessenger: engineBridge.pluginRegistry.registrar(forPlugin: "ScreenSecurity")!.messenger()
+    ).setMethodCallHandler { [weak self] call, result in
+      guard let self else { return }
+      switch call.method {
+      case "setSecure":
+        self.secureScreenActive = true
+        result(nil)
+      case "clearSecure":
+        self.secureScreenActive = false
+        self.removePrivacyOverlay()
+        result(nil)
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+  }
+
+  // MARK: – Privacy overlay (App Switcher blur)
+
+  override func applicationWillResignActive(_ application: UIApplication) {
+    if secureScreenActive { addPrivacyOverlay() }
+  }
+
+  override func applicationDidBecomeActive(_ application: UIApplication) {
+    removePrivacyOverlay()
+  }
+
+  private func addPrivacyOverlay() {
+    guard privacyOverlay == nil,
+          let window = UIApplication.shared.windows.first else { return }
+    let blur = UIBlurEffect(style: .regular)
+    let overlay = UIVisualEffectView(effect: blur)
+    overlay.frame = window.bounds
+    overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    window.addSubview(overlay)
+    privacyOverlay = overlay
+  }
+
+  private func removePrivacyOverlay() {
+    privacyOverlay?.removeFromSuperview()
+    privacyOverlay = nil
   }
 
   // MARK: – Background sync
 
   private func handleAppRefresh(task: BGAppRefreshTask) {
-    scheduleAppRefresh() // re-schedule first — skipping this prevents future executions
+    scheduleAppRefresh()
 
     let engine = FlutterEngine(name: "bg_sync_engine")
     engine.run(withEntrypoint: "backgroundMain", initialRoute: nil)

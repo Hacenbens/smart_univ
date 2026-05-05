@@ -4,6 +4,7 @@ class SecureStorageService {
   static const accessKey = 'auth_access';
   static const refreshKey = 'auth_refresh';
   static const expiryKey = 'auth_expiry';
+  static const credentialsKey = 'auth_credentials';
 
   final FlutterSecureStorage _storage;
 

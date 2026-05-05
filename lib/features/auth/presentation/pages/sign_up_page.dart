@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smart_univ/core/di/injection_container.dart';
+import 'package:smart_univ/core/services/screen_security_service.dart';
 import 'package:smart_univ/features/auth/presentation/bloc/auth_bloc.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -22,7 +24,14 @@ class _SignUpPageState extends State<SignUpPage> {
   bool _obscureConfirm = true;
 
   @override
+  void initState() {
+    super.initState();
+    sl<ScreenSecurityService>().enableSecure();
+  }
+
+  @override
   void dispose() {
+    sl<ScreenSecurityService>().disableSecure();
     _fullNameController.dispose();
     _studentIdController.dispose();
     _departmentController.dispose();
