@@ -16,6 +16,8 @@ abstract interface class AuthRepository {
   });
   Future<Either<AppException, Unit>> signOut();
   Future<Either<AppException, UserProfile?>> getCurrentUser();
+  Future<Either<AppException, UserProfile?>> getStoredProfile();
+  Future<Either<AppException, Unit>> restoreSession(UserProfile profile);
   Future<bool> isLoggedIn();
   Future<bool> isSessionValid();
   Future<bool> refreshSession();

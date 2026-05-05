@@ -43,3 +43,7 @@ final class AuthSignOutRequested extends AuthEvent {
 final class AuthCheckRequested extends AuthEvent {
   const AuthCheckRequested();
 }
+
+final class AuthBiometricRequested extends AuthEvent {
+  const AuthBiometricRequested();
+}

@@ -167,9 +167,10 @@ class _LoginPageState extends State<LoginPage> {
                     },
                   ),
                   const SizedBox(height: 10),
-                  // Biometric button (visual only)
                   OutlinedButton.icon(
-                    onPressed: () {},
+                    onPressed: () => context
+                        .read<AuthBloc>()
+                        .add(const AuthBiometricRequested()),
                     icon: const Icon(Icons.fingerprint, size: 20),
                     label: const Text('Use biometrics instead'),
                     style: OutlinedButton.styleFrom(

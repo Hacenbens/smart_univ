@@ -27,6 +27,7 @@ import 'package:smart_univ/data/datasources/event_remote_datasource.dart';
 import 'package:smart_univ/data/datasources/event_remote_datasource_impl.dart';
 import 'package:smart_univ/data/repositories/announcement_repository_impl.dart';
 import 'package:smart_univ/data/repositories/event_repository_impl.dart';
+import 'package:smart_univ/core/services/biometric_service.dart';
 import 'package:smart_univ/core/services/screen_security_service.dart';
 import 'package:smart_univ/core/services/secure_storage_service.dart';
 import 'package:smart_univ/data/repositories/auth_repository_impl.dart';
@@ -68,6 +69,7 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
   sl.registerLazySingleton(() => NotificationService());
   sl.registerLazySingleton(() => SecureStorageService());
   sl.registerLazySingleton(() => ScreenSecurityService());
+  sl.registerLazySingleton(() => BiometricService());
 
   // ── Local Database ───────────────────────────────────────────────────────────
   sl.registerLazySingleton(() => AppDatabase());
@@ -159,8 +161,8 @@ Future<void> initDependencies({void Function()? onAuthExpired}) async {
       sl<EventRepository>(),
     ),
   );
-  sl.registerFactory(() => AuthBloc(sl<AuthRepository>(), sl<NotificationService>()));
+  sl.registerFactory(() => AuthBloc(sl<AuthRepository>(), sl<NotificationService>(), sl<BiometricService>()));
   sl.registerFactory(
-    () => SettingsBloc(sl<SettingsService>(), sl<ExportTimetableUseCase>(), sl<NotificationService>()),
+    () => SettingsBloc(sl<SettingsService>(), sl<ExportTimetableUseCase>(), sl<NotificationService>(), sl<BiometricService>()),
   );
 }
